@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Rudi Unique — Proxy & Multi-Account Specialist</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --border: #1f1f1f;
+      --border2: #2a2a2a;
+      --text: #f0f0ee;
+      --muted: #666;
+      --accent: #c8f564;
+      --accent-dim: rgba(200,245,100,0.1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* Layout */
+    .page { max-width: 680px; margin: 0 auto; padding: 4rem 1.5rem 6rem; }
+
+    /* Fade in animation */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade { animation: fadeUp 0.5s ease both; }
+    .fade:nth-child(1) { animation-delay: 0s; }
+    .fade:nth-child(2) { animation-delay: 0.08s; }
+    .fade:nth-child(3) { animation-delay: 0.14s; }
+    .fade:nth-child(4) { animation-delay: 0.18s; }
+    .fade:nth-child(5) { animation-delay: 0.22s; }
+    .fade:nth-child(6) { animation-delay: 0.26s; }
+    .fade:nth-child(7) { animation-delay: 0.3s; }
+    .fade:nth-child(8) { animation-delay: 0.34s; }
+
+    /* Header */
+    .header { padding-bottom: 2.5rem; border-bottom: 1px solid var(--border); margin-bottom: 3rem; }
+    .header-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .name { font-size: 2rem; font-weight: 500; letter-spacing: -0.03em; color: var(--text); }
+    .title { font-size: 14px; color: var(--muted); margin-top: 4px; font-weight: 300; }
+    .avail {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; font-family: 'DM Mono', monospace;
+      color: var(--accent); border: 1px solid rgba(200,245,100,0.3);
+      padding: 5px 12px; border-radius: 99px; white-space: nowrap;
+      background: var(--accent-dim);
+    }
+    .avail-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1.25rem; }
+    .tag { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--muted); border: 1px solid var(--border2); padding: 4px 10px; border-radius: 4px; }
+
+    /* Section */
+    .section { margin-bottom: 3rem; }
+    .section-title {
+      font-size: 11px; font-family: 'DM Mono', monospace;
+      color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase;
+      margin-bottom: 1.25rem; padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Stats */
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .stat { background: var(--surface); padding: 1.5rem 1rem; text-align: center; }
+    .stat-num { font-size: 2rem; font-weight: 500; color: var(--accent); letter-spacing: -0.04em; font-family: 'DM Mono', monospace; }
+    .stat-lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    /* Summary */
+    .summary { color: #aaa; line-height: 1.8; font-weight: 300; font-size: 15px; }
+
+    /* Services */
+    .service-list { display: flex; flex-direction: column; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .service {
+      background: var(--surface); padding: 1.25rem 1.5rem;
+      display: flex; align-items: flex-start; gap: 1rem;
+      transition: background 0.2s;
+    }
+    .service:hover { background: #161616; }
+    .service-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--accent-dim); border: 1px solid rgba(200,245,100,0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+    .service-icon svg { width: 15px; height: 15px; stroke: var(--accent); fill: none; stroke-width: 1.8; }
+    .service-name { font-size: 14px; font-weight: 500; color: var(--text); }
+    .service-desc { font-size: 13px; color: var(--muted); margin-top: 3px; line-height: 1.6; }
+
+    /* Skills */
+    .skill-list { display: flex; flex-direction: column; gap: 14px; }
+    .skill-row { display: flex; align-items: center; gap: 1rem; }
+    .skill-name { font-size: 13px; color: #aaa; min-width: 160px; flex-shrink: 0; }
+    .skill-bar { flex: 1; height: 3px; background: var(--border2); border-radius: 99px; overflow: hidden; }
+    .skill-fill { height: 100%; background: var(--accent); border-radius: 99px; transition: width 1s ease; }
+    .skill-pct { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--muted); min-width: 32px; text-align: right; }
+
+    /* Tools */
+    .tool-groups { display: flex; flex-direction: column; gap: 1.5rem; }
+    .tool-group-lbl { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--muted); margin-bottom: 10px; }
+    .tool-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      font-size: 12px; font-family: 'DM Mono', monospace;
+      color: var(--text); background: var(--surface);
+      border: 1px solid var(--border2); border-radius: 6px;
+      padding: 6px 14px; transition: border-color 0.2s, color 0.2s;
+    }
+    .chip:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Contact */
+    .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .contact-item { background: var(--surface); padding: 1.25rem 1.5rem; }
+    .contact-lbl { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--muted); margin-bottom: 5px; }
+    .contact-val { font-size: 14px; color: var(--text); }
+    .contact-val a { color: var(--accent); text-decoration: none; }
+    .contact-val a:hover { text-decoration: underline; }
+
+    /* Footer */
+    .footer { margin-top: 4rem; text-align: center; font-size: 12px; font-family: 'DM Mono', monospace; color: #333; }
+
+    @media (max-width: 500px) {
+      .name { font-size: 1.5rem; }
+      .contact-grid { grid-template-columns: 1fr; }
+      .skill-name { min-width: 120px; }
+      .stats { grid-template-columns: repeat(3,1fr); }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header fade">
+    <div class="header-top">
+      <div>
+        <div class="name">Rudi Unique</div>
+        <div class="title">Multi-Account Manager & Proxy Specialist</div>
+      </div>
+      <span class="avail"><span class="avail-dot"></span>Available for work</span>
+    </div>
+    <div class="tags">
+      <span class="tag">antidetect browser</span>
+      <span class="tag">proxy management</span>
+      <span class="tag">multi-account</span>
+      <span class="tag">ads account setup</span>
+      <span class="tag">web scraping</span>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="section fade">
+    <div class="stats">
+      <div class="stat"><div class="stat-num">50+</div><div class="stat-lbl">Akun dikelola</div></div>
+      <div class="stat"><div class="stat-num">3yr</div><div class="stat-lbl">Pengalaman</div></div>
+      <div class="stat"><div class="stat-num">5+</div><div class="stat-lbl">Tools dikuasai</div></div>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="section fade">
+    <div class="section-title">Tentang</div>
+    <p class="summary">Spesialis manajemen multi-akun dengan 3 tahun pengalaman menggunakan antidetect browser dan residential proxy. Telah mengelola 50+ akun untuk berbagai klien di bidang Facebook Ads, e-commerce multi-store, dan web scraping secara aman tanpa risiko banned. Berpengalaman dalam fingerprint management, proxy rotation, dan account warming.</p>
+  </div>
+
+  <!-- Services -->
+  <div class="section fade">
+    <div class="section-title">Layanan</div>
+    <div class="service-list">
+      <div class="service">
+        <div class="service-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div>
+          <div class="service-name">Multi-Account Setup & Management</div>
+          <div class="service-desc">Setup profil antidetect browser, assign proxy residential per akun, warming akun baru agar tidak banned di Facebook Ads, Google Ads, Amazon, eBay.</div>
+        </div>
+      </div>
+      <div class="service">
+        <div class="service-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </div>
+        <div>
+          <div class="service-name">Proxy & IP Management</div>
+          <div class="service-desc">Konfigurasi residential, mobile, dan datacenter proxy. Proxy rotation untuk scraping, geo-targeting, dan bypass restriction platform.</div>
+        </div>
+      </div>
+      <div class="service">
+        <div class="service-icon">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <div>
+          <div class="service-name">Facebook & Google Ads Account</div>
+          <div class="service-desc">Buat dan kelola akun ads yang stabil, fingerprint management, dan pemulihan akun suspended menggunakan metode yang aman.</div>
+        </div>
+      </div>
+      <div class="service">
+        <div class="service-icon">
+          <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        </div>
+        <div>
+          <div class="service-name">Web Scraping Support</div>
+          <div class="service-desc">Setup proxy rotation untuk scraping data produk, harga, leads, dan informasi kompetitor tanpa diblokir target website.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Skills -->
+  <div class="section fade">
+    <div class="section-title">Keahlian</div>
+    <div class="skill-list">
+      <div class="skill-row"><span class="skill-name">Multi-Account</span><div class="skill-bar"><div class="skill-fill" style="width:95%"></div></div><span class="skill-pct">95%</span></div>
+      <div class="skill-row"><span class="skill-name">Antidetect Browser</span><div class="skill-bar"><div class="skill-fill" style="width:92%"></div></div><span class="skill-pct">92%</span></div>
+      <div class="skill-row"><span class="skill-name">Proxy Management</span><div class="skill-bar"><div class="skill-fill" style="width:90%"></div></div><span class="skill-pct">90%</span></div>
+      <div class="skill-row"><span class="skill-name">Facebook Ads</span><div class="skill-bar"><div class="skill-fill" style="width:80%"></div></div><span class="skill-pct">80%</span></div>
+      <div class="skill-row"><span class="skill-name">E-commerce</span><div class="skill-bar"><div class="skill-fill" style="width:78%"></div></div><span class="skill-pct">78%</span></div>
+      <div class="skill-row"><span class="skill-name">Web Scraping</span><div class="skill-bar"><div class="skill-fill" style="width:75%"></div></div><span class="skill-pct">75%</span></div>
+    </div>
+  </div>
+
+  <!-- Tools -->
+  <div class="section fade">
+    <div class="section-title">Tools</div>
+    <div class="tool-groups">
+      <div>
+        <div class="tool-group-lbl">// antidetect browser</div>
+        <div class="tool-chips">
+          <span class="chip">GoLogin</span>
+          <span class="chip">Multilogin</span>
+          <span class="chip">Mostlogin</span>
+          <span class="chip">Dolphin Anty</span>
+          <span class="chip">AdsPower</span>
+        </div>
+      </div>
+      <div>
+        <div class="tool-group-lbl">// proxy & ip</div>
+        <div class="tool-chips">
+          <span class="chip">Smartproxy</span>
+          <span class="chip">IPRoyal</span>
+          <span class="chip">Brightdata</span>
+        </div>
+      </div>
+      <div>
+        <div class="tool-group-lbl">// platform & verification</div>
+        <div class="tool-chips">
+          <span class="chip">FB Ads Manager</span>
+          <span class="chip">Pixelscan</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contact -->
+  <div class="section fade">
+    <div class="section-title">Kontak</div>
+    <div class="contact-grid">
+      <div class="contact-item">
+        <div class="contact-lbl">// email</div>
+        <div class="contact-val"><a href="mailto:rudi.unique@gmail.com">rudi.unique@gmail.com</a></div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-lbl">// lokasi</div>
+        <div class="contact-val">Surabaya, Indonesia</div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-lbl">// timezone</div>
+        <div class="contact-val">UTC+7 (WIB)</div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-lbl">// respon</div>
+        <div class="contact-val">Dalam 2–4 jam</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">© 2025 · Rudi Unique · rudi.unique@gmail.com</div>
+</div>
+</body>
+</html>
