@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>sb_publishable_z0oKadub8giLFprCNmW6Rg_tUqajLDu
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SIAKAD SD — V5 Eksekusi dengan Desain V4</title>
@@ -10,16 +10,152 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <script>
-      // Ganti dengan data asli dari dashboard Supabase-mu yang tadi ya!
-      const SUPABASE_URL = "sdplus"; 
-      const SUPABASE_ANON_KEY = "sb_publishable_z0oKadub8giLFprCNmW6Rg_tUqajLDu";
+    <!-- ═══════════════════════════════════════════════════════════
+         SIAKAD ↔ Supabase Integration v1
+         ═══════════════════════════════════════════════════════════ -->
+    <script id="siakad-supabase-init">
+    (function() {
+      'use strict';
 
-      // Menyalakan kabel koneksi database
-      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      // ── KONFIGURASI ──────────────────────────────────────────────
+      // Project Anda. SUPABASE_KEY adalah "publishable" key — AMAN di
+      // client. JANGAN pernah taruh "sb_secret_..." atau "service_role"
+      // di file ini.
+      const SUPABASE_URL = 'https://hhcawtwbgfhivwfofdhx.supabase.co';
+      const SUPABASE_KEY = 'sb_publishable_z0oKadub8giLFprCNmW6Rg_tUqajLDu';
 
-      console.log("Kabel database Supabase berhasil tersambung di atas!");
+      // ── SAFETY CHECK ─────────────────────────────────────────────
+      if (!window.supabase || !window.supabase.createClient) {
+        console.error('[SIAKAD] SDK Supabase belum termuat. Cek koneksi internet & tag <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"> di atas.');
+        return;
+      }
+      if (SUPABASE_KEY.indexOf('sb_secret_') === 0 || SUPABASE_KEY.indexOf('service_role') !== -1) {
+        console.error('[SIAKAD] BAHAYA: Key yang Anda pakai adalah SECRET key. Ganti ke publishable key sekarang!');
+        return;
+      }
+
+      // ── BUAT CLIENT ──────────────────────────────────────────────
+      const supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: {
+          persistSession: true,        // simpan session di localStorage
+          autoRefreshToken: true,      // refresh token otomatis sebelum expired
+          detectSessionInUrl: false    // tidak perlu, kita tidak pakai OAuth redirect
+        }
+      });
+      window.supa = supa;  // raw client untuk advanced use
+
+      // ── HELPER API ───────────────────────────────────────────────
+      // Semua simpan*() di file ini nanti akan dipanggil via db.insert,
+      // db.select, dll. — biar konsisten dan error handling terpusat.
+      window.db = {
+        client: supa,
+
+        // Test koneksi — jalankan di console: db.test()
+        test: async function() {
+          console.log('[SIAKAD] Menguji koneksi ke Supabase...');
+          try {
+            const t0 = performance.now();
+            const { data, error } = await supa.auth.getSession();
+            const ms = Math.round(performance.now() - t0);
+            if (error) { console.error('[SIAKAD] ✗ Gagal:', error); return false; }
+            console.log('[SIAKAD] ✓ Koneksi OK (' + ms + ' ms). URL:', SUPABASE_URL);
+            console.log('[SIAKAD]   Session:', data.session ? data.session.user.email : '(belum login)');
+            return true;
+          } catch (e) { console.error('[SIAKAD] ✗ Error:', e); return false; }
+        },
+
+        // INSERT — db.insert('siswa', {nis:'001', nama:'Budi', ...})
+        insert: async function(table, payload) {
+          const { data, error } = await supa.from(table).insert(payload).select().single();
+          if (error) console.error('[db.insert ' + table + ']', error.message);
+          return { data: data, error: error };
+        },
+
+        // SELECT — db.select('siswa', { eq:{kelas:'6A'}, order:'nama', limit:50 })
+        select: async function(table, opts) {
+          opts = opts || {};
+          var q = supa.from(table).select(opts.columns || '*');
+          if (opts.eq) { for (var k in opts.eq) q = q.eq(k, opts.eq[k]); }
+          if (opts.in) { for (var k2 in opts.in) q = q.in(k2, opts.in[k2]); }
+          if (opts.ilike) { for (var k3 in opts.ilike) q = q.ilike(k3, opts.ilike[k3]); }
+          if (opts.order) q = q.order(opts.order, { ascending: opts.ascending !== false });
+          if (opts.limit) q = q.limit(opts.limit);
+          var res = await q;
+          if (res.error) console.error('[db.select ' + table + ']', res.error.message);
+          return { data: res.data || [], error: res.error };
+        },
+
+        // UPDATE — db.update('siswa', 123, { nama:'Budi Santoso' })
+        update: async function(table, id, payload) {
+          const { data, error } = await supa.from(table).update(payload).eq('id', id).select().single();
+          if (error) console.error('[db.update ' + table + '#' + id + ']', error.message);
+          return { data: data, error: error };
+        },
+
+        // DELETE — db.delete('siswa', 123)
+        delete: async function(table, id) {
+          const { error } = await supa.from(table).delete().eq('id', id);
+          if (error) console.error('[db.delete ' + table + '#' + id + ']', error.message);
+          return { error: error };
+        },
+
+        // UPSERT — insert atau update kalau sudah ada (cocok untuk absensi harian)
+        upsert: async function(table, payload, onConflict) {
+          const opts = onConflict ? { onConflict: onConflict } : {};
+          const { data, error } = await supa.from(table).upsert(payload, opts).select();
+          if (error) console.error('[db.upsert ' + table + ']', error.message);
+          return { data: data, error: error };
+        },
+
+        // AUTH HELPERS
+        auth: {
+          signIn: async function(email, password) {
+            const { data, error } = await supa.auth.signInWithPassword({ email: email, password: password });
+            if (error) console.error('[db.auth.signIn]', error.message);
+            return { data: data, error: error };
+          },
+          signUp: async function(email, password, metadata) {
+            const { data, error } = await supa.auth.signUp({
+              email: email, password: password, options: { data: metadata || {} }
+            });
+            if (error) console.error('[db.auth.signUp]', error.message);
+            return { data: data, error: error };
+          },
+          signOut: async function() {
+            const { error } = await supa.auth.signOut();
+            if (error) console.error('[db.auth.signOut]', error.message);
+            return { error: error };
+          },
+          getUser: async function() {
+            const { data } = await supa.auth.getUser();
+            return data.user;
+          },
+          onChange: function(callback) {
+            return supa.auth.onAuthStateChange(callback);
+          }
+        },
+
+        // STORAGE HELPER (untuk foto siswa, bukti bayar, dll.)
+        storage: {
+          upload: async function(bucket, path, file) {
+            const { data, error } = await supa.storage.from(bucket).upload(path, file, { upsert: true });
+            if (error) console.error('[db.storage.upload]', error.message);
+            return { data: data, error: error };
+          },
+          publicUrl: function(bucket, path) {
+            return supa.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+          }
+        }
+      };
+
+      console.log('%c[SIAKAD] ✓ Supabase client siap', 'color:#10B981;font-weight:bold');
+      console.log('[SIAKAD] URL    :', SUPABASE_URL);
+      console.log('[SIAKAD] Helpers: db.test(), db.select(), db.insert(), db.update(), db.delete(), db.upsert()');
+      console.log('[SIAKAD] Auth   : db.auth.signIn(email, pwd), db.auth.signOut(), db.auth.getUser()');
+      console.log('[SIAKAD] Coba ketik: db.test()');
+    })();
     </script>
+    <!-- ═══════════════════════════════════════════════════════════ -->
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
