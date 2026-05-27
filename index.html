@@ -20655,6 +20655,472 @@ function exportDetailAbsensiGuruPDF() {
 })();
 </script>
 
+<script id="fix-persist-module-data-v12">
+/* ════════════════════════════════════════════════════════════
+   FIX: PERSIST DATA MODUL  (Keuangan, Surat, Inventaris, UKS,
+   Pengumuman, Ekskul, Arsip)
+   ─────────────────────────────────────────────────────────────
+   MASALAH:
+     Ketujuh modul di atas dibangun ulang dari baris HTML statis
+     setiap kali halaman dimuat (lewat seedModuleDataFromDom()).
+     Karena perubahan tidak pernah disimpan, data yang DIHAPUS /
+     DIEDIT / DITAMBAH akan "balik lagi" ke data contoh setelah
+     halaman di-reload — sehingga tahun ajaran baru tidak pernah
+     bisa dimulai bersih.
+
+   SOLUSI (mengikuti pola seedUsersFromDom yang sudah benar):
+     1. Muat data dari localStorage lebih dulu saat reload.
+     2. Kalau belum ada simpanan, ambil dari HTML SEKALI saja lalu
+        langsung disimpan sebagai data awal.
+     3. Simpan otomatis setiap kali ada perubahan (semua tambah/
+        edit/hapus selalu berakhir di fungsi render).
+   ════════════════════════════════════════════════════════════ */
+(function(){
+  'use strict';
+  var MODULE_KEY = 'sdplus_module_data_v1';
+  var FIELDS = ['keuanganData','suratData','inventarisData','uksData','pengumumanData','ekskulData','arsipData'];
+
+  function saveModuleData(){
+    try {
+      var out = {};
+      FIELDS.forEach(function(f){ out[f] = Array.isArray(window[f]) ? window[f] : []; });
+      localStorage.setItem(MODULE_KEY, JSON.stringify(out));
+    } catch(e){ console.warn('[PersistModul] gagal menyimpan:', e); }
+  }
+  window.saveModuleData = saveModuleData;
+
+  function loadSavedModuleData(){
+    try {
+      var raw = localStorage.getItem(MODULE_KEY);
+      if(!raw) return false;
+      var saved = JSON.parse(raw);
+      if(!saved || typeof saved !== 'object') return false;
+      var ada = false;
+      FIELDS.forEach(function(f){ if(Array.isArray(saved[f])){ window[f] = saved[f]; ada = true; } });
+      return ada;
+    } catch(e){ console.warn('[PersistModul] gagal membaca:', e); return false; }
+  }
+
+  // 1) Hidrasi dari localStorage dulu; baru fallback ke HTML pada run pertama.
+  var origSeed = window.seedModuleDataFromDom;
+  window.seedModuleDataFromDom = function(){
+    if(loadSavedModuleData()) return;               // sudah ada data tersimpan
+    if(typeof origSeed === 'function') origSeed();  // run pertama: ambil dari HTML
+    saveModuleData();                               // simpan sbg baseline
+  };
+
+  // 2) Bungkus fungsi render agar otomatis menyimpan setelah render
+  //    (semua operasi tambah/edit/hapus memanggil render di akhirnya).
+  ['renderKeuanganTable','renderSurat','renderInventaris','renderUKS','renderPengumuman','renderEkskul','renderArsip'].forEach(function(name){
+    var fn = window[name];
+    if(typeof fn !== 'function' || fn.__persistWrapped) return;
+    var wrapped = function(){
+      var r = fn.apply(this, arguments);
+      saveModuleData();
+      return r;
+    };
+    wrapped.__persistWrapped = true;
+    window[name] = wrapped;
+  });
+
+  // 3) Utility (opsional): kembalikan ke data contoh bawaan bila perlu.
+  //    Jalankan di Console:  resetModuleDataToDemo()
+  window.resetModuleDataToDemo = function(){
+    try { localStorage.removeItem(MODULE_KEY); } catch(e){}
+    location.reload();
+  };
+
+  console.log('[PersistModul] Aktif — Keuangan/Surat/Inventaris/UKS/Pengumuman/Ekskul/Arsip kini tersimpan permanen.');
+})();
+</script>
+
+<script id="fix-persist-tahun-ajaran-v12">
+/* ════════════════════════════════════════════════════════════
+   FIX: PERSIST TAHUN AJARAN & SEMESTER
+   ─────────────────────────────────────────────────────────────
+   MASALAH:
+     Halaman "Tahun Ajaran & Semester" sepenuhnya berbasis HTML
+     statis. Tombol "Buat Tahun Ajaran Baru" (simpanTahunAjaran),
+     Edit (editTahunAjaran), dan Hapus (hapusTahunAjaran) hanya
+     menamb/mengubah/menghapus baris <tr> di layar TANPA menyimpan.
+     Akibatnya setiap reload kembali ke 3 baris contoh bawaan:
+       - tahun ajaran baru yang dibuat → HILANG
+       - tahun ajaran yang dihapus     → MUNCUL LAGI
+
+   SOLUSI:
+     Simpan isi tabel ke localStorage dan muat kembali saat reload.
+     Memakai MutationObserver supaya SEMUA perubahan (tambah, edit,
+     hapus — termasuk hapus lewat dialog konfirmasi yang asинхрон)
+     otomatis tersimpan tanpa perlu mengubah fungsi aslinya.
+   ════════════════════════════════════════════════════════════ */
+(function(){
+  'use strict';
+  var TA_KEY = 'sdplus_tahun_ajaran_v1';
+
+  function getTbody(){ return document.querySelector('#page-tahun-ajaran .data-table tbody'); }
+
+  function saveTA(){
+    try { var tb = getTbody(); if(tb) localStorage.setItem(TA_KEY, tb.innerHTML); }
+    catch(e){ console.warn('[PersistTahunAjaran] gagal menyimpan:', e); }
+  }
+
+  function refreshDropdown(){
+    try { if(typeof populateKenaikanSelects === 'function') populateKenaikanSelects(); } catch(e){}
+    try { if(typeof _fillTahunAjaranSelect === 'function') _fillTahunAjaranSelect('naik-tahun-ajaran'); } catch(e){}
+  }
+
+  function initTA(){
+    var tb = getTbody();
+    if(!tb) return;
+
+    var saved = null;
+    try { saved = localStorage.getItem(TA_KEY); } catch(e){}
+
+    if(saved != null){
+      tb.innerHTML = saved;          // pakai data yang tersimpan
+    } else {
+      try { localStorage.setItem(TA_KEY, tb.innerHTML); } catch(e){}  // simpan baris contoh sbg baseline
+    }
+
+    refreshDropdown();
+
+    // Pantau setiap perubahan baris → simpan otomatis.
+    try {
+      var obs = new MutationObserver(function(){ saveTA(); refreshDropdown(); });
+      obs.observe(tb, { childList:true, subtree:true, characterData:true });
+    } catch(e){ console.warn('[PersistTahunAjaran] observer gagal:', e); }
+  }
+
+  // Utility (opsional) untuk kembali ke data contoh bawaan:
+  //   Jalankan di Console:  resetTahunAjaranToDemo()
+  window.resetTahunAjaranToDemo = function(){
+    try { localStorage.removeItem(TA_KEY); } catch(e){}
+    location.reload();
+  };
+
+  // Jalankan setelah handler aplikasi lain (siswa, modul) selesai.
+  window.addEventListener('DOMContentLoaded', function(){ initTA(); });
+
+  console.log('[PersistTahunAjaran] Aktif — Tahun Ajaran & Semester kini tersimpan permanen.');
+})();
+</script>
+
+<script id="fix-tahun-ajaran-nonaktif-lama-v12">
+/* ════════════════════════════════════════════════════════════
+   FIX: BUAT TAHUN AJARAN BARU → NONAKTIFKAN YANG LAMA
+   ─────────────────────────────────────────────────────────────
+   Permintaan: saat membuat tahun ajaran baru, tahun ajaran lama
+   yang masih berstatus "Aktif" otomatis DINONAKTIFKAN (status
+   diubah menjadi "Selesai") — BUKAN dihapus. Datanya tetap ada
+   sebagai riwayat, sehingga yang berstatus "Aktif" hanya SATU
+   (yang baru).
+   ════════════════════════════════════════════════════════════ */
+(function(){
+  'use strict';
+  var origSimpan = window.simpanTahunAjaran;
+  if(typeof origSimpan !== 'function') {
+    console.warn('[TahunAjaran] simpanTahunAjaran tidak ditemukan — fitur nonaktif-lama dilewati.');
+    return;
+  }
+
+  var BADGE_SELESAI = '<span style="background:var(--gray-100);color:var(--gray-600);' +
+    'padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">Selesai</span>';
+
+  window.simpanTahunAjaran = function(){
+    // Hanya ubah status lama bila input valid (biar validasi asli tetap jalan).
+    var input = document.getElementById('ta-tahun');
+    var val = input ? String(input.value || '').trim() : '';
+    if(val){
+      try {
+        var tb = document.querySelector('#page-tahun-ajaran .data-table tbody');
+        if(tb){
+          Array.from(tb.rows).forEach(function(r){
+            var statusCell = r.cells && r.cells[4] ? r.cells[4] : null;
+            if(!statusCell) return;
+            if(statusCell.textContent.toLowerCase().indexOf('aktif') !== -1){
+              statusCell.innerHTML = BADGE_SELESAI;   // nonaktifkan: Aktif → Selesai
+            }
+          });
+        }
+      } catch(e){ console.warn('[TahunAjaran] gagal menonaktifkan yang lama:', e); }
+    }
+    // Lanjut ke proses asli (menambah baris baru berstatus Aktif + audit log).
+    return origSimpan.apply(this, arguments);
+  };
+
+  console.log('[TahunAjaran] Aktif — membuat tahun ajaran baru otomatis menonaktifkan yang lama (Aktif → Selesai).');
+})();
+</script>
+
+<script id="fix-supabase-audit-backup-v13">
+/* ════════════════════════════════════════════════════════════
+   FIX V13 — AUDIT LOG & BACKUP HISTORY → SUPABASE
+   ─────────────────────────────────────────────────────────────
+   DDL (jalankan sekali di Supabase SQL Editor):
+
+   -- Tabel audit log
+   create table if not exists audit_log (
+     id          bigint generated always as identity primary key,
+     waktu       timestamptz not null default now(),
+     pengguna    text        not null default 'unknown',
+     aktivitas   text        not null,
+     detail      text,
+     ip_address  text
+   );
+   alter table audit_log enable row level security;
+   create policy "allow all" on audit_log
+     for all using (true) with check (true);
+
+   -- Tabel riwayat backup
+   create table if not exists backup_history (
+     id          bigint generated always as identity primary key,
+     tanggal     text not null,
+     filename    text not null,
+     ukuran      text default 'JSON',
+     tipe        text default 'Manual',
+     status      text default 'Sukses',
+     created_at  timestamptz not null default now()
+   );
+   alter table backup_history enable row level security;
+   create policy "allow all" on backup_history
+     for all using (true) with check (true);
+   ════════════════════════════════════════════════════════════ */
+(function(){
+'use strict';
+
+/* ══════════════════════════════════════════════════════════
+   BAGIAN 1 — AUDIT LOG
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Muat audit log dari Supabase dan render ke #tbody-audit ── */
+async function loadAuditLog() {
+  if (!window.db || typeof db.select !== 'function') return;
+  const { data, error } = await db.select('audit_log', {
+    order: 'waktu', ascending: false, limit: 200
+  });
+  if (error || !data || !data.length) return;
+
+  const tbody = document.getElementById('tbody-audit');
+  if (!tbody) return;
+
+  const actMap = {
+    LOGIN:  'var(--green-50);color:var(--green-700)',
+    LOGOUT: 'var(--gray-100);color:var(--gray-600)',
+    EDIT:   'var(--blue-50);color:var(--blue-600)',
+    CREATE: 'var(--amber-50);color:var(--amber-400)',
+    DELETE: 'var(--coral-50);color:var(--coral-400)',
+    EXPORT: 'var(--purple-50);color:var(--purple-400)',
+    VIEW:   'var(--teal-50,#f0fdfa);color:var(--teal-600,#0f766e)',
+    PRINT:  'var(--blue-50);color:var(--blue-600)',
+  };
+
+  tbody.innerHTML = '';
+  data.forEach(function(row) {
+    const d = new Date(row.waktu);
+    const tgl = d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})
+              + ' ' + d.toTimeString().slice(0,5);
+    const act   = String(row.aktivitas || '').toUpperCase();
+    const style = actMap[act] || 'var(--gray-100);color:var(--gray-600)';
+    const esc   = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td style="color:var(--gray-500);font-size:12px;">'  + esc(tgl)                  + '</td>'
+    + '<td><strong>'                                         + esc(row.pengguna||'-')     + '</strong></td>'
+    + '<td><span style="background:'+style+';padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">'
+                                                             + esc(act)                   + '</span></td>'
+    + '<td>'                                                 + esc(row.detail||'')        + '</td>'
+    + '<td style="font-family:monospace;font-size:12px;">'   + esc(row.ip_address||'-')   + '</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+/* ── Override tambahAuditLog: render ke DOM + INSERT ke Supabase ── */
+const _origTambahAudit = window.tambahAuditLog;
+window.tambahAuditLog = function(aktivitas, detail) {
+  // Render ke DOM seperti biasa
+  if (typeof _origTambahAudit === 'function') _origTambahAudit.apply(this, arguments);
+
+  // INSERT ke Supabase (async, tidak blokir UI)
+  if (window.db && typeof db.insert === 'function') {
+    const u  = (typeof getCurrentUser === 'function' && getCurrentUser())
+               ? getCurrentUser().username
+               : (typeof _currentUser !== 'undefined' ? _currentUser : 'unknown');
+    const ip = typeof _currentIp !== 'undefined' ? _currentIp : '127.0.0.1';
+    db.insert('audit_log', {
+      pengguna:   u,
+      aktivitas:  String(aktivitas || '').toUpperCase(),
+      detail:     String(detail || ''),
+      ip_address: ip,
+    });
+  }
+};
+
+/* ══════════════════════════════════════════════════════════
+   BAGIAN 2 — BACKUP HISTORY
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Muat riwayat backup dari Supabase dan render ke #tbody-backup ── */
+async function loadBackupHistory() {
+  if (!window.db || typeof db.select !== 'function') return;
+  const { data, error } = await db.select('backup_history', {
+    order: 'created_at', ascending: false, limit: 50
+  });
+  if (error || !data || !data.length) return;
+
+  const tbody = document.getElementById('tbody-backup');
+  if (!tbody) return;
+
+  tbody.innerHTML = '';
+  data.forEach(function(row) {
+    const tipeBadge = (row.tipe === 'Otomatis')
+      ? '<span style="background:var(--green-50);color:var(--green-700);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">Otomatis</span>'
+      : '<span style="background:var(--blue-50);color:var(--blue-600);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">Manual</span>';
+    const fn  = String(row.filename||'').replace(/'/g,"\\'");
+    const tgl = String(row.tanggal||'').replace(/'/g,"\\'");
+    const tr  = document.createElement('tr');
+    tr.innerHTML =
+      '<td style="color:var(--gray-500);font-size:12px;">'  + (row.tanggal||'')  + '</td>'
+    + '<td class="nis-badge">'                               + (row.filename||'') + '</td>'
+    + '<td>'                                                 + (row.ukuran||'')   + '</td>'
+    + '<td>'                                                 + tipeBadge          + '</td>'
+    + '<td><span class="status-badge aktif">'                + (row.status||'Sukses') + '</span></td>'
+    + '<td>'
+    +   '<button class="action-btn view" onclick="unduhBackup(\''+fn+'\')">Unduh</button>'
+    +   '<button class="action-btn edit" onclick="restoreBackup(\''+tgl+'\')">Restore</button>'
+    + '</td>';
+    tbody.appendChild(tr);
+  });
+
+  // Update stat card "Backup Terakhir"
+  const lbt = document.getElementById('last-backup-time');
+  if (lbt && data[0] && data[0].tanggal) lbt.textContent = data[0].tanggal;
+}
+
+/* ── Override lakukanBackup: proses asli + INSERT ke Supabase ── */
+const _origBackup = window.lakukanBackup;
+window.lakukanBackup = function() {
+  if (typeof _origBackup === 'function') _origBackup.apply(this, arguments);
+
+  if (window.db && typeof db.insert === 'function') {
+    const now      = new Date();
+    const dateStr  = now.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})
+                   + ' ' + now.toTimeString().slice(0,5);
+    const fileName = 'backup_siakad_' + now.toISOString().slice(0,10).replace(/-/g,'') + '_v13.json';
+    db.insert('backup_history', {
+      tanggal:  dateStr,
+      filename: fileName,
+      ukuran:   'JSON',
+      tipe:     'Manual',
+      status:   'Sukses',
+    });
+  }
+};
+
+/* ══════════════════════════════════════════════════════════
+   BAGIAN 3 — LOAD OTOMATIS SAAT BUKA HALAMAN
+   ══════════════════════════════════════════════════════════ */
+const _origShowPage = window.showPage;
+window.showPage = function(id, navEl) {
+  if (typeof _origShowPage === 'function') _origShowPage.apply(this, arguments);
+  if (id === 'audit')  loadAuditLog();
+  if (id === 'backup') loadBackupHistory();
+};
+
+// Kalau halaman audit/backup sudah aktif saat pertama load
+window.addEventListener('DOMContentLoaded', function() {
+  const active = document.querySelector('.page-view.active');
+  if (!active) return;
+  if (active.id === 'page-audit')  loadAuditLog();
+  if (active.id === 'page-backup') loadBackupHistory();
+});
+
+/* ══════════════════════════════════════════════════════════
+   BAGIAN 4 — HITUNG UKURAN DATA NYATA
+   ══════════════════════════════════════════════════════════ */
+
+/* Hitung ukuran JSON snapshot dan format ke KB/MB */
+function hitungUkuranData() {
+  try {
+    const snapshot = buildBackupSnapshot('_size_check_');
+    const bytes = new Blob([JSON.stringify(snapshot)]).size;
+    if (bytes < 1024)           return bytes + ' B';
+    if (bytes < 1024 * 1024)    return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+  } catch(e) {
+    return '-';
+  }
+}
+
+/* Update stat card "Total Data" dengan ukuran nyata */
+function updateStatTotalData() {
+  const el = document.querySelector('#page-backup .stat-value');
+  if (!el) return;
+  el.textContent = hitungUkuranData();
+}
+
+/* Override lakukanBackup yang sudah ada di atas agar kolom
+   "Ukuran" di baris riwayat juga terisi ukuran nyata */
+const _origLakukanBackupV13 = window.lakukanBackup;
+window.lakukanBackup = function() {
+  const ukuranNyata = hitungUkuranData();
+  if (typeof _origLakukanBackupV13 === 'function') _origLakukanBackupV13.apply(this, arguments);
+  setTimeout(function() {
+    const tbody = document.getElementById('tbody-backup');
+    if (tbody && tbody.rows[0] && tbody.rows[0].cells[2]) {
+      tbody.rows[0].cells[2].textContent = ukuranNyata;
+    }
+    updateStatTotalData();
+  }, 100);
+};
+
+/* ══════════════════════════════════════════════════════════
+   BAGIAN 5 — BERSIHKAN DATA LAMA AUDIT LOG & PENGATURAN
+   ══════════════════════════════════════════════════════════ */
+
+/* FIX AUDIT LOG — selalu kosongkan baris statis HTML
+   sebelum Supabase merespons, tampilkan loading sementara */
+const _origLoadAuditLog = loadAuditLog;
+loadAuditLog = async function() {
+  const tbody = document.getElementById('tbody-audit');
+  if (tbody) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-400);padding:20px;font-size:13px;">'
+                    + '<i class="ti ti-loader" style="margin-right:6px;"></i>Memuat dari Supabase...</td></tr>';
+  }
+  const ok = await _origLoadAuditLog();
+  /* Kalau Supabase kosong / error → tampilkan empty state, bukan baris lama */
+  if (!ok && tbody) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-400);padding:24px;font-size:13px;">'
+                    + 'Belum ada aktivitas tercatat.</td></tr>';
+  }
+  return ok;
+};
+
+/* FIX PENGATURAN — hapus guard _pengaturanSupabaseLoaded
+   agar Supabase selalu di-query ulang setiap buka halaman.
+   Guard itu menyebabkan nilai lama/default terus muncul
+   kalau load pertama gagal. */
+window._pengaturanSupabaseLoaded = false;   // reset flag
+
+const _origShowPageAll = window.showPage;
+window.showPage = function(id, navEl) {
+  if (typeof _origShowPageAll === 'function') _origShowPageAll.apply(this, arguments);
+
+  /* Pengaturan: paksa reload Supabase setiap kali halaman dibuka */
+  if (id === 'pengaturan') {
+    window._pengaturanSupabaseLoaded = false;   // reset agar handler asli mau load ulang
+    setTimeout(loadPengaturanFromSupabase, 50);
+  }
+
+  /* Backup: update stat ukuran */
+  if (id === 'backup') setTimeout(updateStatTotalData, 200);
+};
+
+console.log('[V13] ✓ Audit Log & Backup History tersambung ke Supabase.');
+console.log('[V13] ✓ Stat "Total Data" dihitung dari snapshot nyata.');
+console.log('[V13] ✓ Baris statis Audit Log & guard Pengaturan dibersihkan.');
+})();
+</script>
+
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"7939e04a4baf43c8b86a560f74aac60e","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
