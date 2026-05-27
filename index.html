@@ -21343,156 +21343,386 @@ console.log('[V13] ✓ Audit Log & Backup → Supabase. Data lama HTML dihapus d
 })();
 </script>
 <script crossorigin="anonymous" data-cf-beacon='{"version":"2024.11.0","token":"7939e04a4baf43c8b86a560f74aac60e","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' defer="" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"7939e04a4baf43c8b86a560f74aac60e","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 
 
-<script id="safe-supabase-local-modules-sync-v2">
-/* SAFE SUPABASE SYNC V2
-   Hanya menambah sinkron data modul lokal ke tabel app_module_data.
-   Tidak mengubah login, menu, layout, role, atau auto-login.
-*/
+<script id="sdplus-supabase-modules-sync-v18-safe">
+/* SD PLUS V18 SAFE — sinkron modul lokal ke Supabase tanpa mengubah login/layout */
 (function(){
   'use strict';
-  var TABLE = 'app_module_data';
-  var isLoading = false;
-  var timers = {};
-  var warned = false;
+  if (window.__SDPLUS_MODULE_SYNC_V18_SAFE) return;
+  window.__SDPLUS_MODULE_SYNC_V18_SAFE = true;
 
-  function ready(){ return !!(window.supa && typeof window.supa.from === 'function'); }
-  function toArray(v){ return Array.isArray(v) ? v : []; }
-  function clone(v){ try { return JSON.parse(JSON.stringify(v)); } catch(e){ return v; } }
-  function notice(msg){
-    console.warn('[SafeModuleSync] ' + msg);
-    if(!warned){
-      warned = true;
-      try { if(typeof showToast === 'function') showToast('Tabel app_module_data belum siap / belum bisa diakses.', 'amber'); } catch(e){}
+  var TABLE = 'app_module_data';
+  var hydrated = Object.create(null);
+  var saving = Object.create(null);
+  var timer = Object.create(null);
+  var suppress = false;
+  var booted = false;
+
+  var MODULES = {
+    keuangan:      { ref:'keuanganData',     page:'keuangan',      label:'Keuangan', render:['renderKeuanganTable','updateKeuanganStats','updateDashboardStats'] },
+    surat:         { ref:'suratData',        page:'surat',         label:'Surat', render:['renderSurat','updateDashboardStats'] },
+    inventaris:    { ref:'inventarisData',   page:'inventaris',    label:'Inventaris', render:['renderInventaris','updateDashboardStats'] },
+    uks:           { ref:'uksData',          page:'uks',           label:'UKS', render:['renderUKS','updateDashboardStats'] },
+    pengumuman:    { ref:'pengumumanData',   page:'pengumuman',    label:'Pengumuman', render:['renderPengumuman','updateNotifBadgeV11','updateDashboardStats'] },
+    ekskul:        { ref:'ekskulData',       page:'ekskul',        label:'Ekstrakurikuler', render:['renderEkskul','updateDashboardStats'] },
+    arsip:         { ref:'arsipData',        page:'arsip',         label:'Arsip Dokumen', render:['renderArsip','updateDashboardStats'] },
+    ppdb:          { ref:'ppdbList',         page:'ppdb',          label:'PPDB', render:['renderPPDBTable','updatePPDBStats','updateDashboardStats'] },
+    hafalan:       { ref:'hafalanData',      page:'hafalan',       label:'Hafalan', render:['renderHafalan','updateDashboardStats'] },
+    ibadah:        { ref:'ibadahData',       page:'ibadah',        label:'Ibadah', render:['renderIbadah','updateDashboardStats'] },
+    karakter:      { ref:'karakterData',     page:'karakter',      label:'Karakter', render:['renderKarakter','updateDashboardStats'] },
+    prestasi:      { ref:'prestasiData',     page:'prestasi',      label:'Prestasi', render:['renderPrestasi','updateDashboardStats'] },
+    pelanggaran:   { ref:'pelanggaranData',  page:'pelanggaran',   label:'Pelanggaran', render:['renderPelanggaran','renderRekapPelanggaran','updatePelanggaranStats'] },
+    perp_buku:     { ref:'bukuList',         page:'perpustakaan',  label:'Perpustakaan - Buku', render:['renderBuku','updateDashboardStats'] },
+    perp_pinjam:   { ref:'peminjamanList',   page:'perpustakaan',  label:'Perpustakaan - Peminjaman', render:['renderPeminjaman','updateDashboardStats'] },
+    perp_kembali:  { ref:'pengembalianList', page:'perpustakaan',  label:'Perpustakaan - Pengembalian', render:['renderPengembalian','updateDashboardStats'] },
+    daftar_kelas:  { ref:'daftarKelas',      page:'siswa',         label:'Kelola Kelas', render:['renderKelolaKelasList','populateAllKelasSelects','populateKenaikanSelects','updateDashboardStats'] },
+    jam_pelajaran: { ref:'jamList',          page:'jadwal',        label:'Jam Pelajaran', render:['renderAturJamList','populateJamSelect','renderJadwal'] }
+  };
+
+  var PAGE_MAP = {};
+  Object.keys(MODULES).forEach(function(k){
+    var p = MODULES[k].page;
+    if (!PAGE_MAP[p]) PAGE_MAP[p] = [];
+    PAGE_MAP[p].push(k);
+  });
+  PAGE_MAP['tahun-ajaran'] = ['tahun_ajaran'];
+
+  function log(){ try { console.log.apply(console, arguments); } catch(e) {} }
+  function warn(){ try { console.warn.apply(console, arguments); } catch(e) {} }
+  function toast(msg, color){
+    try { if (typeof showToast === 'function') return showToast(msg, color || 'green'); } catch(e) {}
+    try { if (typeof _toast === 'function') return _toast(msg, color || 'green'); } catch(e) {}
+    log(msg);
+  }
+  function dbReady(){ return !!(window.db && typeof db.select === 'function' && typeof db.upsert === 'function'); }
+  function getGlobal(name){
+    try { return Function('return (typeof '+name+' === "undefined") ? undefined : '+name+';')(); }
+    catch(e) { try { return window[name]; } catch(e2) { return undefined; } }
+  }
+  function setGlobal(name, value){
+    try { return Function('v', name+' = v; return true;')(value); }
+    catch(e) { try { window[name] = value; return true; } catch(e2) { return false; } }
+  }
+  function getFn(name){ var f = getGlobal(name); return typeof f === 'function' ? f : null; }
+  function clone(v){ try { return JSON.parse(JSON.stringify(v == null ? [] : v)); } catch(e) { return Array.isArray(v) ? v.slice() : (v || []); } }
+  function normalize(v){ if (v == null) return []; if (typeof v === 'string') { try { return JSON.parse(v); } catch(e) { return v; } } return v; }
+  function readRef(ref){ var v = getGlobal(ref); return v == null ? [] : clone(v); }
+  function writeRef(ref, payload){
+    payload = normalize(payload);
+    var cur = getGlobal(ref);
+    if (Array.isArray(cur) && Array.isArray(payload)) {
+      cur.splice.apply(cur, [0, cur.length].concat(payload));
+      return true;
+    }
+    return setGlobal(ref, payload);
+  }
+  async function hasSession(){
+    try {
+      if (!window.supa || !supa.auth || !supa.auth.getSession) return true;
+      var r = await supa.auth.getSession();
+      return !!(r && r.data && r.data.session);
+    } catch(e) { return true; }
+  }
+  async function remoteGet(key){
+    if (!dbReady()) return { ok:false, error:'Supabase/db belum siap' };
+    try {
+      var res = await db.select(TABLE, { eq:{ module_key:key }, limit:1 });
+      if (res.error) return { ok:false, error:res.error.message || String(res.error) };
+      var row = res.data && res.data[0];
+      return row ? { ok:true, found:true, payload:normalize(row.payload), row:row } : { ok:true, found:false };
+    } catch(e) { return { ok:false, error:e.message || String(e) }; }
+  }
+  async function remoteSet(key, payload){
+    if (!dbReady()) return { ok:false, error:'Supabase/db belum siap' };
+    try {
+      var body = { module_key:key, payload:clone(payload), updated_at:new Date().toISOString() };
+      try { var user = await db.auth.getUser(); if (user && user.id) body.updated_by = user.id; } catch(e) {}
+      var res = await db.upsert(TABLE, body, 'module_key');
+      if (res && res.error && /updated_by|column/i.test(res.error.message || '')) {
+        delete body.updated_by;
+        res = await db.upsert(TABLE, body, 'module_key');
+      }
+      if (res && res.error) return { ok:false, error:res.error.message || String(res.error) };
+      return { ok:true };
+    } catch(e) { return { ok:false, error:e.message || String(e) }; }
+  }
+  function renderModule(key){
+    var cfg = MODULES[key];
+    if (!cfg) return;
+    (cfg.render || []).forEach(function(name){ try { var fn = getFn(name); if (fn) fn(); } catch(e) { warn('[ModuleSync] render gagal', key, name, e); } });
+  }
+  async function hydrateModule(key, force){
+    var cfg = MODULES[key];
+    if (!cfg || (hydrated[key] && !force)) return true;
+    if (!(await hasSession())) return false;
+    var remote = await remoteGet(key);
+    if (!remote.ok) { warn('[ModuleSync] gagal muat '+key+': '+remote.error); return false; }
+    suppress = true;
+    try {
+      if (remote.found) {
+        writeRef(cfg.ref, remote.payload);
+      } else {
+        var local = readRef(cfg.ref);
+        if ((Array.isArray(local) && local.length) || (!Array.isArray(local) && local)) await remoteSet(key, local);
+      }
+      hydrated[key] = true;
+      renderModule(key);
+    } finally { setTimeout(function(){ suppress = false; }, 150); }
+    return true;
+  }
+  function scheduleSave(key, delay){
+    if (suppress || !MODULES[key]) return;
+    clearTimeout(timer[key]);
+    timer[key] = setTimeout(async function(){
+      if (!(await hasSession())) return;
+      if (!hydrated[key]) await hydrateModule(key);
+      if (saving[key]) return;
+      saving[key] = true;
+      var res = await remoteSet(key, readRef(MODULES[key].ref));
+      saving[key] = false;
+      if (!res.ok) warn('[ModuleSync] gagal simpan '+key+': '+res.error);
+      else hydrated[key] = true;
+    }, delay || 600);
+  }
+  function wrap(name, after){
+    var fn = getFn(name);
+    if (!fn || fn.__sdplusSyncV18) return;
+    var wrapped = function(){
+      var out = fn.apply(this, arguments);
+      try { after.apply(this, arguments); } catch(e) { warn('[ModuleSync] wrapper '+name, e); }
+      return out;
+    };
+    wrapped.__sdplusSyncV18 = true;
+    setGlobal(name, wrapped);
+  }
+  function installWrappers(){
+    if (booted) return; booted = true;
+    Object.keys(MODULES).forEach(function(k){
+      (MODULES[k].render || []).forEach(function(r){ wrap(r, function(){ scheduleSave(k); }); });
+    });
+    ['tambahBuku','simpanEditBuku','tambahPeminjaman','kembalikanBuku'].forEach(function(n){ wrap(n, function(){ scheduleSave('perp_buku',100); scheduleSave('perp_pinjam',100); scheduleSave('perp_kembali',100); }); });
+    ['simpanAturJam','aturJamTambahBaris','aturJamHapus','aturJamToggleIstirahat','aturJamUpdateValue'].forEach(function(n){ wrap(n, function(){ scheduleSave('jam_pelajaran',200); }); });
+    wrap('showPage', function(id){ setTimeout(function(){ hydratePage(id); }, 120); });
+  }
+  function getTahunBody(){ return document.querySelector('#page-tahun-ajaran .data-table tbody'); }
+  async function hydrateTahun(force){
+    if (hydrated.tahun_ajaran && !force) return true;
+    if (!(await hasSession())) return false;
+    var tb = getTahunBody(); if (!tb) return false;
+    var remote = await remoteGet('tahun_ajaran'); if (!remote.ok) { warn('[ModuleSync] gagal muat tahun ajaran:', remote.error); return false; }
+    suppress = true;
+    try {
+      if (remote.found && remote.payload && typeof remote.payload.html === 'string') tb.innerHTML = remote.payload.html;
+      else if ((tb.innerHTML || '').trim()) await remoteSet('tahun_ajaran', { html: tb.innerHTML || '' });
+      hydrated.tahun_ajaran = true;
+    } finally { setTimeout(function(){ suppress = false; }, 150); }
+    return true;
+  }
+  function saveTahun(){
+    if (suppress) return;
+    clearTimeout(timer.tahun_ajaran);
+    timer.tahun_ajaran = setTimeout(async function(){ var tb = getTahunBody(); if (tb && await hasSession()) await remoteSet('tahun_ajaran', { html: tb.innerHTML || '' }); }, 700);
+  }
+  function installTahunObserver(){
+    var tb = getTahunBody();
+    if (!tb || tb.__sdplusSyncTahunV18) return;
+    tb.__sdplusSyncTahunV18 = true;
+    try { new MutationObserver(saveTahun).observe(tb, { childList:true, subtree:true, characterData:true }); } catch(e) {}
+    ['simpanTahunAjaran','hapusTahunAjaran','editTahunAjaran'].forEach(function(n){ wrap(n, function(){ setTimeout(saveTahun, 200); }); });
+  }
+  async function hydratePage(page){
+    installTahunObserver();
+    var keys = PAGE_MAP[page] || [];
+    for (var i=0;i<keys.length;i++) {
+      if (keys[i] === 'tahun_ajaran') await hydrateTahun();
+      else await hydrateModule(keys[i]);
     }
   }
-  function delay(key, fn, ms){ clearTimeout(timers[key]); timers[key] = setTimeout(fn, ms || 700); }
+  async function hydrateAll(){
+    installWrappers(); installTahunObserver();
+    if (!(await hasSession())) return;
+    for (var k in MODULES) await hydrateModule(k);
+    await hydrateTahun();
+    log('[ModuleSync] modul lokal selesai dicek/dimuat dari Supabase.');
+  }
+  window.cekIntegrasiSupabase = async function(){
+    var rows = [];
+    async function check(name){
+      try { var r = await db.select(name, { limit:1 }); return r.error ? ('ERROR: '+(r.error.message || r.error)) : 'OK'; }
+      catch(e){ return 'ERROR: '+(e.message || e); }
+    }
+    if (!dbReady()) { warn('Supabase/db belum siap'); return rows; }
+    var core = [
+      ['profiles','Pengguna & Hak Akses'], ['siswa','Data Siswa'], ['guru','Guru & Pegawai'],
+      ['absensi_siswa','Absensi Siswa'], ['absensi_guru','Absensi Guru'], ['jadwal_pelajaran','Jadwal'],
+      ['nilai_siswa','Nilai'], ['kalender_events','Kalender'], ['mutasi','Mutasi'],
+      ['pengaturan_sekolah','Pengaturan'], ['audit_log','Audit Log'], ['backup_history','Backup']
+    ];
+    rows.push({ bagian:'Login/password', tabel:'auth.users', status:'OK - cek di Authentication' });
+    for (var i=0;i<core.length;i++) rows.push({ bagian:core[i][1], tabel:core[i][0], status: await check(core[i][0]) });
+    rows.push({ bagian:'Tabel modul lokal', tabel:TABLE, status: await check(TABLE) });
+    for (var k in MODULES) { var r = await remoteGet(k); rows.push({ bagian:MODULES[k].label, tabel:TABLE, module_key:k, status:r.ok ? (r.found ? 'OK ada data' : 'OK siap, belum ada data') : ('ERROR: '+r.error) }); }
+    var ta = await remoteGet('tahun_ajaran'); rows.push({ bagian:'Tahun Ajaran', tabel:TABLE, module_key:'tahun_ajaran', status:ta.ok ? (ta.found ? 'OK ada data' : 'OK siap, belum ada data') : ('ERROR: '+ta.error) });
+    try { console.table(rows); } catch(e) { log(rows); }
+    return rows;
+  };
+  window.syncModulLokalKeSupabase = async function(){
+    installWrappers();
+    for (var k in MODULES) { hydrated[k] = true; await remoteSet(k, readRef(MODULES[k].ref)); }
+    var tb = getTahunBody(); if (tb) await remoteSet('tahun_ajaran', { html: tb.innerHTML || '' });
+    toast('Sinkronisasi modul lokal ke Supabase selesai.', 'green');
+    return window.cekIntegrasiSupabase();
+  };
+  function boot(){
+    installWrappers(); installTahunObserver();
+    try { if (window.db && db.auth && typeof db.auth.onChange === 'function') db.auth.onChange(function(ev, session){ if (session) setTimeout(hydrateAll, 700); }); } catch(e) {}
+    setTimeout(hydrateAll, 1200);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+  log('[ModuleSync] V18 SAFE aktif. Jalankan cekIntegrasiSupabase() untuk cek status.');
+})();
 
-  function getModules(){
-    var m = [];
-    function add(key, getter, setter, renderer){ m.push({key:key, get:getter, set:setter, render:renderer || function(){}}); }
-    try { add('ppdbList', function(){return window.ppdbList || ppdbList || [];}, function(v){ window.ppdbList = toArray(v); try{ ppdbList = window.ppdbList; }catch(e){} }, function(){ try{renderPPDBTable(); updatePPDBStats();}catch(e){} }); } catch(e){}
-    try { add('hafalanData', function(){return window.hafalanData || hafalanData || [];}, function(v){ window.hafalanData = toArray(v); try{ hafalanData = window.hafalanData; }catch(e){} }, function(){ try{renderHafalan();}catch(e){} }); } catch(e){}
-    try { add('ibadahData', function(){return window.ibadahData || ibadahData || [];}, function(v){ window.ibadahData = toArray(v); try{ ibadahData = window.ibadahData; }catch(e){} }, function(){ try{renderIbadah();}catch(e){} }); } catch(e){}
-    try { add('karakterData', function(){return window.karakterData || karakterData || [];}, function(v){ window.karakterData = toArray(v); try{ karakterData = window.karakterData; }catch(e){} }, function(){ try{renderKarakter();}catch(e){} }); } catch(e){}
-    try { add('prestasiData', function(){return window.prestasiData || prestasiData || [];}, function(v){ window.prestasiData = toArray(v); try{ prestasiData = window.prestasiData; }catch(e){} }, function(){ try{ if(typeof renderPrestasi === 'function') renderPrestasi(); }catch(e){} }); } catch(e){}
-    try { add('pelanggaranData', function(){return window.pelanggaranData || [];}, function(v){ window.pelanggaranData = toArray(v); }, function(){ try{renderPelanggaran(); updatePelanggaranStats(); renderRekapPelanggaran();}catch(e){} }); } catch(e){}
-    try { add('keuanganData', function(){return window.keuanganData || keuanganData || [];}, function(v){ window.keuanganData = toArray(v); try{ keuanganData = window.keuanganData; }catch(e){} }, function(){ try{renderKeuanganTable();}catch(e){} }); } catch(e){}
-    try { add('suratData', function(){return window.suratData || suratData || [];}, function(v){ window.suratData = toArray(v); try{ suratData = window.suratData; }catch(e){} }, function(){ try{renderSurat();}catch(e){} }); } catch(e){}
-    try { add('inventarisData', function(){return window.inventarisData || inventarisData || [];}, function(v){ window.inventarisData = toArray(v); try{ inventarisData = window.inventarisData; }catch(e){} }, function(){ try{renderInventaris();}catch(e){} }); } catch(e){}
-    try { add('uksData', function(){return window.uksData || uksData || [];}, function(v){ window.uksData = toArray(v); try{ uksData = window.uksData; }catch(e){} }, function(){ try{renderUKS();}catch(e){} }); } catch(e){}
-    try { add('pengumumanData', function(){return window.pengumumanData || pengumumanData || [];}, function(v){ window.pengumumanData = toArray(v); try{ pengumumanData = window.pengumumanData; }catch(e){} }, function(){ try{renderPengumuman();}catch(e){} }); } catch(e){}
-    try { add('ekskulData', function(){return window.ekskulData || ekskulData || [];}, function(v){ window.ekskulData = toArray(v); try{ ekskulData = window.ekskulData; }catch(e){} }, function(){ try{renderEkskul();}catch(e){} }); } catch(e){}
-    try { add('arsipData', function(){return window.arsipData || arsipData || [];}, function(v){ window.arsipData = toArray(v); try{ arsipData = window.arsipData; }catch(e){} }, function(){ try{renderArsip();}catch(e){} }); } catch(e){}
-    try { add('bukuList', function(){return window.bukuList || bukuList || [];}, function(v){ window.bukuList = toArray(v); try{ bukuList = window.bukuList; }catch(e){} }, function(){ try{renderBuku();}catch(e){} }); } catch(e){}
-    try { add('peminjamanList', function(){return window.peminjamanList || peminjamanList || [];}, function(v){ window.peminjamanList = toArray(v); try{ peminjamanList = window.peminjamanList; }catch(e){} }, function(){ try{renderPeminjaman();}catch(e){} }); } catch(e){}
-    try { add('pengembalianList', function(){return window.pengembalianList || pengembalianList || [];}, function(v){ window.pengembalianList = toArray(v); try{ pengembalianList = window.pengembalianList; }catch(e){} }, function(){ try{renderPengembalian();}catch(e){} }); } catch(e){}
+</script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"7939e04a4baf43c8b86a560f74aac60e","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script id="sdplus-qr-siswa-scan-final-safe">
+(function(){
+  'use strict';
+  var QR_LIB = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+  var stream = null;
+  var scanning = false;
+
+  function $(id){ return document.getElementById(id); }
+  function esc(v){ return String(v == null ? '' : v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function toast(msg,type){ if(typeof showToast === 'function') showToast(msg,type||'green'); else alert(msg); }
+  function today(){ var d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); }
+  function addStyle(){
+    if($('sdplus-qr-final-style')) return;
+    var s=document.createElement('style');
+    s.id='sdplus-qr-final-style';
+    s.textContent = '.sdq-modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.52);z-index:280000;align-items:center;justify-content:center;padding:18px}.sdq-modal.show{display:flex}.sdq-box{background:#fff;border-radius:18px;border:1px solid #e5e7eb;box-shadow:0 24px 80px rgba(0,0,0,.22);width:min(760px,96vw);max-height:92vh;overflow:auto;padding:22px}.sdq-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:16px}.sdq-title{font-size:18px;font-weight:800;margin:0;color:#111827}.sdq-sub{font-size:12px;color:#71717a;margin-top:3px}.sdq-close{border:0;background:#f4f4f5;border-radius:10px;width:34px;height:34px;cursor:pointer;font-size:22px;color:#52525b}.sdq-grid{display:grid;grid-template-columns:250px 1fr;gap:18px;align-items:start}.sdq-qrbox{min-height:246px;border:1px dashed #d4d4d8;border-radius:14px;background:#fafafa;display:flex;align-items:center;justify-content:center;padding:14px;text-align:center}.sdq-info{display:grid;grid-template-columns:1fr 1fr;gap:10px}.sdq-info-card{border:1px solid #e5e7eb;border-radius:12px;padding:10px 12px;background:#fff}.sdq-lab{font-size:10px;color:#71717a;font-weight:800;text-transform:uppercase;letter-spacing:.06em}.sdq-val{font-size:13px;color:#18181b;font-weight:700;margin-top:3px}.sdq-video{width:100%;max-height:360px;border-radius:14px;background:#111;display:none}.sdq-result{margin-top:12px;padding:12px;border:1px solid #e5e7eb;border-radius:12px;background:#fafafa;font-size:13px;line-height:1.5}.sdq-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.sdq-manual{width:100%;min-height:70px;border:1px solid #d4d4d8;border-radius:10px;padding:10px 12px;font-family:monospace;font-size:12px;margin-top:10px}@media(max-width:760px){.sdq-grid{grid-template-columns:1fr}.sdq-info{grid-template-columns:1fr}}';
+    document.head.appendChild(s);
+  }
+  function loadScript(src, test){
+    if(test && test()) return Promise.resolve();
+    return new Promise(function(resolve,reject){
+      var old=[].slice.call(document.scripts).find(function(x){return (x.src||'')===src;});
+      if(old){ old.addEventListener('load',resolve,{once:true}); setTimeout(resolve,1000); return; }
+      var sc=document.createElement('script'); sc.src=src; sc.async=true; sc.onload=resolve; sc.onerror=function(){reject(new Error('Gagal memuat library QR. Cek internet.'));}; document.head.appendChild(sc);
+    });
+  }
+  function listSiswa(){
+    try{ if(typeof getFilteredSortedSiswa==='function') return getFilteredSortedSiswa(); }catch(e){}
+    try{ if(typeof siswaList!=='undefined' && Array.isArray(siswaList)) return siswaList.slice(); }catch(e){}
+    return [];
+  }
+  function rawSiswa(){ try{ if(typeof siswaList!=='undefined' && Array.isArray(siswaList)) return siswaList; }catch(e){} return []; }
+  function findSiswa(id){ try{ if(typeof findSiswaById==='function') return findSiswaById(id); }catch(e){} return rawSiswa().find(function(s){return String(s.id||s._id||'')===String(id);}); }
+  function payload(s){ return 'SISWA|' + String(s.id || s._id || '').trim() + '|' + String(s.nis || '').trim(); }
+  function parsePayload(text){
+    var raw=String(text||'').trim(); var p=raw.split('|'); var id='',nis='';
+    if(p[0]==='SISWA'){ id=String(p[1]||'').trim(); nis=String(p[2]||'').trim(); } else { nis=raw; }
+    var arr=rawSiswa(); var s=null;
+    if(id) s=arr.find(function(x){return String(x.id||x._id||'')===id;});
+    if(!s && nis) s=arr.find(function(x){return String(x.nis||'').trim()===nis;});
+    return {raw:raw,id:id,nis:nis,siswa:s};
+  }
+  async function qrDataUrl(text,size){
+    await loadScript(QR_LIB,function(){return !!window.QRCode;});
+    var box=document.createElement('div'); box.style.cssText='position:fixed;left:-9999px;top:-9999px;width:'+size+'px;height:'+size+'px;background:white;'; document.body.appendChild(box);
+    new QRCode(box,{text:text,width:size,height:size,correctLevel:QRCode.CorrectLevel.M});
+    await new Promise(function(r){setTimeout(r,150);});
+    var img=box.querySelector('img'), canvas=box.querySelector('canvas');
+    var url=img&&img.src?img.src:(canvas&&canvas.toDataURL?canvas.toDataURL('image/png'):'');
+    box.remove(); if(!url) throw new Error('QR gagal dibuat'); return url;
+  }
+  async function showQr(id){
+    addStyle(); var s=findSiswa(id); if(!s){alert('Data siswa tidak ditemukan.');return;}
+    var m=$('sdq-view-modal'); if(!m){
+      m=document.createElement('div'); m.id='sdq-view-modal'; m.className='sdq-modal';
+      m.innerHTML='<div class="sdq-box"><div class="sdq-head"><div><h3 class="sdq-title">QR Siswa</h3><div class="sdq-sub">QR dibuat dari Data Siswa.</div></div><button class="sdq-close" id="sdq-view-close">&times;</button></div><div class="sdq-grid"><div class="sdq-qrbox" id="sdq-view-qr">Menyiapkan QR...</div><div><div class="sdq-info" id="sdq-view-info"></div><textarea class="sdq-manual" id="sdq-view-payload" readonly></textarea><div class="sdq-actions"><button class="btn btn-primary" id="sdq-print-one" type="button"><i class="ti ti-printer"></i> Cetak</button><button class="btn btn-secondary" id="sdq-download-one" type="button"><i class="ti ti-download"></i> Download PNG</button><button class="btn btn-secondary" id="sdq-close-one" type="button">Tutup</button></div></div></div></div>';
+      document.body.appendChild(m);
+      $('sdq-view-close').onclick=$('sdq-close-one').onclick=function(){m.classList.remove('show');};
+    }
+    m.__siswa=s; $('sdq-view-qr').innerHTML='Menyiapkan QR...'; $('sdq-view-payload').value=payload(s);
+    $('sdq-view-info').innerHTML=[['Nama',s.nama],['NIS',s.nis],['Kelas',s.kelas],['Status',s.status||'Aktif']].map(function(a){return '<div class="sdq-info-card"><div class="sdq-lab">'+esc(a[0])+'</div><div class="sdq-val">'+esc(a[1]||'-')+'</div></div>';}).join('');
+    $('sdq-print-one').onclick=function(){printQrCards([s]);};
+    $('sdq-download-one').onclick=async function(){ var url=s.__qrUrl || await qrDataUrl(payload(s),300); s.__qrUrl=url; var a=document.createElement('a'); a.href=url; a.download='QR_'+String(s.nama||'siswa').replace(/[^a-z0-9]+/gi,'_')+'.png'; document.body.appendChild(a); a.click(); a.remove(); };
+    m.classList.add('show');
+    try{ var url=s.__qrUrl || await qrDataUrl(payload(s),220); s.__qrUrl=url; $('sdq-view-qr').innerHTML='<img src="'+url+'" style="width:220px;height:220px" alt="QR Siswa"><div style="font-size:11px;color:#71717a;margin-top:8px;">'+esc(payload(s))+'</div>'; }catch(e){ $('sdq-view-qr').innerHTML='<span style="color:#dc2626">'+esc(e.message||e)+'</span>'; }
+  }
+  async function printQrCards(arr){
+    if(!arr.length){alert('Tidak ada siswa untuk dicetak.');return;}
+    toast('Menyiapkan QR...', 'blue');
+    var cards=[];
+    for(var i=0;i<arr.length;i++){
+      var s=arr[i]; var url=s.__qrUrl || await qrDataUrl(payload(s),220); s.__qrUrl=url;
+      cards.push('<div class="card"><img class="qr" src="'+url+'"><div><div class="lab">Nama</div><div class="val">'+esc(s.nama||'-')+'</div><div class="lab">NIS</div><div class="val">'+esc(s.nis||'-')+'</div><div class="lab">Kelas</div><div class="val">'+esc(s.kelas||'-')+'</div><div class="meta">'+esc(payload(s))+'</div></div></div>');
+    }
+    var html='<!doctype html><html><head><meta charset="utf-8"><title>Kartu QR Siswa</title><style>body{font-family:Arial,sans-serif;margin:18px;color:#111827}.title{font-size:20px;font-weight:700;margin-bottom:12px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.card{border:1px solid #d1d5db;border-radius:14px;padding:14px;display:grid;grid-template-columns:118px 1fr;gap:14px;align-items:center;break-inside:avoid}.qr{width:118px;height:118px;border:1px solid #e5e7eb;border-radius:10px;padding:6px}.lab{font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase}.val{font-size:14px;font-weight:700;margin:3px 0 8px}.meta{font-size:10px;color:#71717a;word-break:break-all}@media print{body{margin:10mm}.grid{gap:10px}}</style></head><body><div class="title">Kartu QR Siswa</div><div class="grid">'+cards.join('')+'</div></body></html>';
+    var w=window.open('','_blank','width=1000,height=750'); if(!w){alert('Popup diblokir browser. Izinkan pop-up lalu coba lagi.');return;}
+    w.document.open(); w.document.write(html); w.document.close(); setTimeout(function(){try{w.focus();w.print();}catch(e){}},400);
+  }
+  function stopCam(){ scanning=false; var v=$('sdq-video'); if(v){try{v.pause();}catch(e){} v.srcObject=null; v.style.display='none';} if(stream){stream.getTracks().forEach(function(t){try{t.stop();}catch(e){}}); stream=null;} }
+  function scanModal(){
+    addStyle(); var m=$('sdq-scan-modal'); if(m) return m;
+    m=document.createElement('div'); m.id='sdq-scan-modal'; m.className='sdq-modal';
+    m.innerHTML='<div class="sdq-box"><div class="sdq-head"><div><h3 class="sdq-title">Scan QR Absensi Siswa</h3><div class="sdq-sub">Scan kartu QR siswa, lalu otomatis simpan Hadir.</div></div><button class="sdq-close" id="sdq-scan-close">&times;</button></div><video id="sdq-video" class="sdq-video" playsinline muted></video><canvas id="sdq-canvas" style="display:none"></canvas><div class="sdq-actions"><button class="btn btn-primary" id="sdq-cam" type="button"><i class="ti ti-camera"></i> Buka Kamera</button><button class="btn btn-secondary" id="sdq-stop" type="button">Stop Kamera</button></div><textarea class="sdq-manual" id="sdq-manual" placeholder="Atau tempel isi QR di sini, contoh: SISWA|23|2024001"></textarea><div class="sdq-actions"><button class="btn btn-secondary" id="sdq-process" type="button">Proses Manual</button><button class="btn btn-secondary" id="sdq-scan-close2" type="button">Tutup</button></div><div class="sdq-result" id="sdq-result">Belum ada scan.</div></div>';
+    document.body.appendChild(m);
+    $('sdq-scan-close').onclick=$('sdq-scan-close2').onclick=function(){stopCam();m.classList.remove('show');};
+    $('sdq-stop').onclick=stopCam; $('sdq-cam').onclick=startCam; $('sdq-process').onclick=function(){processScan($('sdq-manual').value);};
     return m;
   }
-  function findModule(key){ return getModules().filter(function(m){ return m.key === key; })[0]; }
-
-  async function saveModule(key){
-    if(isLoading || !ready()) return;
-    var m = findModule(key);
-    if(!m) return;
+  async function startCam(){
+    var res=$('sdq-result'); res.innerHTML='Membuka kamera...';
+    if(!('BarcodeDetector' in window)){ res.innerHTML='<b style="color:#dc2626">Browser ini belum mendukung scan kamera langsung.</b><br>Pakai input manual isi QR dulu, atau buka di Chrome terbaru/HP Android.'; return; }
     try{
-      var res = await window.supa.from(TABLE).upsert({
-        module_key: key,
-        payload: clone(m.get()),
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'module_key' });
-      if(res.error) notice('Gagal simpan ' + key + ': ' + res.error.message);
-    }catch(e){ notice('Gagal simpan ' + key + ': ' + (e.message || e)); }
+      stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
+      var v=$('sdq-video'); v.srcObject=stream; v.style.display='block'; await v.play(); scanning=true; res.innerHTML='Kamera aktif. Arahkan ke QR siswa.';
+      var detector=new BarcodeDetector({formats:['qr_code']});
+      (async function loop(){ if(!scanning) return; try{ var codes=await detector.detect(v); if(codes&&codes.length){ stopCam(); processScan(codes[0].rawValue); return; } }catch(e){} requestAnimationFrame(loop); })();
+    }catch(e){ res.innerHTML='<b style="color:#dc2626">Kamera tidak bisa dibuka.</b><br><span style="font-size:12px;color:#71717a">'+esc(e.message||e)+'</span>'; }
   }
-  function queueSave(key){ delay(key, function(){ saveModule(key); }, 800); }
-  async function saveAll(){
-    var list = getModules();
-    for(var i=0;i<list.length;i++) await saveModule(list[i].key);
-    await saveTahunAjaran();
-  }
-
-  async function loadAll(){
-    if(!ready()) return;
-    var list = getModules();
-    if(!list.length) return;
-    var keys = list.map(function(m){ return m.key; });
-    isLoading = true;
+  async function processScan(text){
+    var res=$('sdq-result'); text=String(text||'').trim(); if(!text){res.innerHTML='<b style="color:#dc2626">Isi QR kosong.</b>';return;}
+    try{ if(!rawSiswa().length && typeof loadSiswaFromSupabase==='function') await loadSiswaFromSupabase(); }catch(e){}
+    var f=parsePayload(text), s=f.siswa; if(!s){res.innerHTML='<b style="color:#dc2626">QR tidak cocok dengan Data Siswa.</b><br><span style="font-size:12px;color:#71717a">Terbaca: '+esc(text)+'</span>';return;}
+    var t=today(), kelas=String(s.kelas||''), sid=String(s.id||s._id||'');
+    if(!kelas||!sid){res.innerHTML='<b style="color:#dc2626">Data siswa belum lengkap.</b>';return;}
     try{
-      var res = await window.supa.from(TABLE).select('module_key,payload').in('module_key', keys);
-      if(res.error){ notice('Gagal load app_module_data: ' + res.error.message); return; }
-      var map = {};
-      (res.data || []).forEach(function(r){ map[r.module_key] = r.payload; });
-      list.forEach(function(m){ if(Object.prototype.hasOwnProperty.call(map, m.key)) m.set(map[m.key]); });
-      list.forEach(function(m){ try{ m.render(); }catch(e){} });
-      await loadTahunAjaran();
-      console.log('[SafeModuleSync] load selesai:', (res.data || []).length, 'modul');
-    }catch(e){ notice('Gagal load app_module_data: ' + (e.message || e)); }
-    finally{ isLoading = false; }
+      if(typeof absensiStore!=='undefined'){
+        if(!absensiStore[kelas]) absensiStore[kelas]={}; if(!absensiStore[kelas][t]) absensiStore[kelas][t]={}; absensiStore[kelas][t][sid]='Hadir';
+        if(typeof _saveAbsensiSiswaLocal==='function') _saveAbsensiSiswaLocal();
+      }
+      if(window.db && typeof db.upsert==='function'){
+        var r=await db.upsert('absensi_siswa',{kelas:kelas,tanggal:t,siswa_id:sid,status:'Hadir'},'kelas,tanggal,siswa_id');
+        if(r&&r.error) throw r.error;
+      } else throw new Error('Supabase belum siap.');
+      ['renderAbsensiRekap','renderRiwayatAbsensiSiswa','renderRekapSemuaKelas','updateDashboardStats'].forEach(function(n){try{if(typeof window[n]==='function') window[n]();}catch(e){}});
+      res.innerHTML='<b style="color:#047857">Berhasil absen Hadir ✓</b><br><strong>'+esc(s.nama||'-')+'</strong><br>NIS: '+esc(s.nis||'-')+'<br>Kelas: '+esc(kelas)+'<br>Tanggal: '+esc(t);
+      toast('Absensi QR tersimpan: '+(s.nama||'Siswa'),'green');
+    }catch(e){res.innerHTML='<b style="color:#dc2626">Gagal simpan absensi.</b><br>'+esc(e.message||e);}
   }
-
-  async function saveTahunAjaran(){
-    if(isLoading || !ready()) return;
-    var tb = document.querySelector('#page-tahun-ajaran .data-table tbody');
-    if(!tb) return;
-    try{
-      var res = await window.supa.from(TABLE).upsert({
-        module_key: 'tahunAjaranHtml',
-        payload: { html: tb.innerHTML },
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'module_key' });
-      if(res.error) notice('Gagal simpan tahun ajaran: ' + res.error.message);
-    }catch(e){ notice('Gagal simpan tahun ajaran: ' + (e.message || e)); }
+  function patchRows(){
+    var page=$('page-siswa'); if(!page) return;
+    page.querySelectorAll('tbody tr[data-id]').forEach(function(tr){
+      if(tr.__qrPatched) return; tr.__qrPatched=true;
+      var id=tr.getAttribute('data-id'); var btn=tr.querySelector('.siswa-btn-view') || tr.querySelector('button[onclick^="lihatSiswaById"]');
+      if(btn){ btn.classList.add('siswa-btn-qr'); btn.title='QR Siswa'; btn.setAttribute('aria-label','QR Siswa'); btn.innerHTML='<i class="ti ti-qrcode"></i>'; btn.onclick=function(ev){ev.preventDefault();ev.stopPropagation();showQr(id);return false;}; }
+    });
   }
-  async function loadTahunAjaran(){
-    if(!ready()) return;
-    try{
-      var res = await window.supa.from(TABLE).select('payload').eq('module_key','tahunAjaranHtml').maybeSingle();
-      if(res.error){ notice('Gagal load tahun ajaran: ' + res.error.message); return; }
-      var tb = document.querySelector('#page-tahun-ajaran .data-table tbody');
-      if(tb && res.data && res.data.payload && res.data.payload.html) tb.innerHTML = res.data.payload.html;
-    }catch(e){ notice('Gagal load tahun ajaran: ' + (e.message || e)); }
-  }
-
-  function wrap(name, keys){
-    var old = window[name];
-    if(typeof old !== 'function' || old.__safeModuleSync) return;
-    var fn = function(){
-      var result = old.apply(this, arguments);
-      Promise.resolve(result).finally(function(){ if(!isLoading) keys.forEach(queueSave); });
-      return result;
-    };
-    fn.__safeModuleSync = true;
-    window[name] = fn;
-  }
-  function install(){
-    wrap('simpanPPDB', ['ppdbList']); wrap('terimaPPDB', ['ppdbList']); wrap('hapusPPDB', ['ppdbList']);
-    wrap('simpanHafalan', ['hafalanData']); wrap('simpanIbadah', ['ibadahData']); wrap('simpanKarakter', ['karakterData']); wrap('simpanPrestasi', ['prestasiData']);
-    wrap('simpanPelanggaran', ['pelanggaranData']); wrap('hapusPelanggaran', ['pelanggaranData']);
-    wrap('tambahBuku', ['bukuList']); wrap('simpanEditBuku', ['bukuList']); wrap('pinjamBuku', ['peminjamanList','bukuList']); wrap('tambahPeminjaman', ['peminjamanList']); wrap('kembalikanBuku', ['pengembalianList','peminjamanList','bukuList']);
-    var oldSave = window.saveModuleData;
-    if(typeof oldSave === 'function' && !oldSave.__safeModuleSync){
-      var saveKeys = ['keuanganData','suratData','inventarisData','uksData','pengumumanData','ekskulData','arsipData'];
-      var newSave = function(){
-        var r = oldSave.apply(this, arguments);
-        if(!isLoading) saveKeys.forEach(queueSave);
-        return r;
-      };
-      newSave.__safeModuleSync = true;
-      window.saveModuleData = newSave;
+  function addButtons(){
+    var ps=$('page-siswa'); if(ps){
+      var h=ps.querySelector('.page-header > div'); if(h&&!$('sdq-print-all')){ var b=document.createElement('button'); b.id='sdq-print-all'; b.type='button'; b.className='btn btn-secondary'; b.innerHTML='<i class="ti ti-qrcode"></i> Cetak QR Siswa'; b.onclick=function(){printQrCards(listSiswa());}; h.appendChild(b); }
+      var tb=ps.querySelector('.toolbar'); if(tb&&!$('sdq-print-filter')){ var b2=document.createElement('button'); b2.id='sdq-print-filter'; b2.type='button'; b2.className='btn btn-secondary'; b2.innerHTML='<i class="ti ti-printer"></i> Print QR (Filter)'; b2.onclick=function(){printQrCards(listSiswa());}; tb.appendChild(b2); }
+      patchRows();
     }
-    ['simpanTahunAjaran','editTahunAjaran','hapusTahunAjaran'].forEach(function(n){ wrap(n, []); });
-    var tb = document.querySelector('#page-tahun-ajaran .data-table tbody');
-    if(tb){ try{ new MutationObserver(function(){ delay('tahunAjaranHtml', saveTahunAjaran, 900); }).observe(tb, {childList:true, subtree:true, characterData:true, attributes:true}); }catch(e){} }
+    var pa=$('page-absensi-siswa'); if(pa&&!$('sdq-open-scan')){ var input=$('btn-input-absensi-siswa'); var b3=document.createElement('button'); b3.id='sdq-open-scan'; b3.type='button'; b3.className='btn btn-secondary'; b3.innerHTML='<i class="ti ti-qrcode"></i> Scan QR Siswa'; b3.onclick=function(){scanModal().classList.add('show');}; if(input&&input.parentNode) input.parentNode.appendChild(b3); else pa.querySelector('.page-header').appendChild(b3); }
   }
-
-  window.safeModuleSync = { loadAll: loadAll, saveAll: saveAll, saveModule: saveModule, table: TABLE };
-  window.addEventListener('DOMContentLoaded', function(){
-    setTimeout(function(){
-      install();
-      loadAll().then(function(){ setTimeout(saveAll, 1500); });
-    }, 1800);
-  });
+  function boot(){ addButtons(); setTimeout(addButtons,800); setTimeout(addButtons,2200); try{ new MutationObserver(function(){patchRows();}).observe(document.body,{childList:true,subtree:true}); }catch(e){} }
+  window.sdplusQrSiswaFinalSafe = {addButtons:addButtons,showQr:showQr,scan:function(){scanModal().classList.add('show');}};
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
 })();
 </script>
 
