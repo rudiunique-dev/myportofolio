@@ -21592,6 +21592,10 @@ console.log('[V13] ✓ Audit Log & Backup → Supabase. Data lama HTML dihapus d
   var QR_LIB = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
   var stream = null;
   var scanning = false;
+  var cameraList = [];        // daftar kamera yang tersedia
+  var currentCamIdx = 0;      // indeks kamera aktif
+  var scannedIds = new Set(); // proteksi duplikat per sesi modal
+  var lastScanTime = 0;       // cooldown antar scan
 
   function $(id){ return document.getElementById(id); }
   function esc(v){ return String(v == null ? '' : v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
@@ -21601,7 +21605,7 @@ console.log('[V13] ✓ Audit Log & Backup → Supabase. Data lama HTML dihapus d
     if($('sdplus-qr-final-style')) return;
     var s=document.createElement('style');
     s.id='sdplus-qr-final-style';
-    s.textContent = '.sdq-modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.52);z-index:280000;align-items:center;justify-content:center;padding:18px}.sdq-modal.show{display:flex}.sdq-box{background:#fff;border-radius:18px;border:1px solid #e5e7eb;box-shadow:0 24px 80px rgba(0,0,0,.22);width:min(760px,96vw);max-height:92vh;overflow:auto;padding:22px}.sdq-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:16px}.sdq-title{font-size:18px;font-weight:800;margin:0;color:#111827}.sdq-sub{font-size:12px;color:#71717a;margin-top:3px}.sdq-close{border:0;background:#f4f4f5;border-radius:10px;width:34px;height:34px;cursor:pointer;font-size:22px;color:#52525b}.sdq-grid{display:grid;grid-template-columns:250px 1fr;gap:18px;align-items:start}.sdq-qrbox{min-height:246px;border:1px dashed #d4d4d8;border-radius:14px;background:#fafafa;display:flex;align-items:center;justify-content:center;padding:14px;text-align:center}.sdq-info{display:grid;grid-template-columns:1fr 1fr;gap:10px}.sdq-info-card{border:1px solid #e5e7eb;border-radius:12px;padding:10px 12px;background:#fff}.sdq-lab{font-size:10px;color:#71717a;font-weight:800;text-transform:uppercase;letter-spacing:.06em}.sdq-val{font-size:13px;color:#18181b;font-weight:700;margin-top:3px}.sdq-video{width:100%;max-height:360px;border-radius:14px;background:#111;display:none}.sdq-result{margin-top:12px;padding:12px;border:1px solid #e5e7eb;border-radius:12px;background:#fafafa;font-size:13px;line-height:1.5}.sdq-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.sdq-manual{width:100%;min-height:70px;border:1px solid #d4d4d8;border-radius:10px;padding:10px 12px;font-family:monospace;font-size:12px;margin-top:10px}@media(max-width:760px){.sdq-grid{grid-template-columns:1fr}.sdq-info{grid-template-columns:1fr}}';
+    s.textContent = '.sdq-modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.52);z-index:280000;align-items:center;justify-content:center;padding:18px}.sdq-modal.show{display:flex}.sdq-box{background:#fff;border-radius:18px;border:1px solid #e5e7eb;box-shadow:0 24px 80px rgba(0,0,0,.22);width:min(760px,96vw);max-height:92vh;overflow:auto;padding:22px}.sdq-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:16px}.sdq-title{font-size:18px;font-weight:800;margin:0;color:#111827}.sdq-sub{font-size:12px;color:#71717a;margin-top:3px}.sdq-close{border:0;background:#f4f4f5;border-radius:10px;width:34px;height:34px;cursor:pointer;font-size:22px;color:#52525b}.sdq-grid{display:grid;grid-template-columns:260px 1fr;gap:18px;align-items:start}.sdq-qrbox{border:1px dashed #d4d4d8;border-radius:14px;background:#fafafa;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center;box-sizing:border-box;width:100%;overflow:hidden}.sdq-qrbox img{max-width:100%;height:auto;display:block;border-radius:8px}.sdq-info{display:grid;grid-template-columns:1fr 1fr;gap:10px}.sdq-info-card{border:1px solid #e5e7eb;border-radius:12px;padding:10px 12px;background:#fff}.sdq-lab{font-size:10px;color:#71717a;font-weight:800;text-transform:uppercase;letter-spacing:.06em}.sdq-val{font-size:13px;color:#18181b;font-weight:700;margin-top:3px}.sdq-video{width:100%;max-height:360px;border-radius:14px;background:#111;display:none}.sdq-result{margin-top:12px;padding:12px;border:1px solid #e5e7eb;border-radius:12px;background:#fafafa;font-size:13px;line-height:1.5}.sdq-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.sdq-manual{width:100%;min-height:70px;border:1px solid #d4d4d8;border-radius:10px;padding:10px 12px;font-family:monospace;font-size:12px;margin-top:10px}@media(max-width:600px){.sdq-grid{grid-template-columns:1fr}.sdq-info{grid-template-columns:1fr}.sdq-qrbox img{max-width:240px}}';
     document.head.appendChild(s);
   }
   function loadScript(src, test){
@@ -21650,7 +21654,7 @@ console.log('[V13] ✓ Audit Log & Backup → Supabase. Data lama HTML dihapus d
     $('sdq-print-one').onclick=function(){printQrCards([s]);};
     $('sdq-download-one').onclick=async function(){ var url=s.__qrUrl || await qrDataUrl(payload(s),300); s.__qrUrl=url; var a=document.createElement('a'); a.href=url; a.download='QR_'+String(s.nama||'siswa').replace(/[^a-z0-9]+/gi,'_')+'.png'; document.body.appendChild(a); a.click(); a.remove(); };
     m.classList.add('show');
-    try{ var url=s.__qrUrl || await qrDataUrl(payload(s),220); s.__qrUrl=url; $('sdq-view-qr').innerHTML='<img src="'+url+'" style="width:220px;height:220px" alt="QR Siswa"><div style="font-size:11px;color:#71717a;margin-top:8px;">'+esc(payload(s))+'</div>'; }catch(e){ $('sdq-view-qr').innerHTML='<span style="color:#dc2626">'+esc(e.message||e)+'</span>'; }
+    try{ var url=s.__qrUrl || await qrDataUrl(payload(s),240); s.__qrUrl=url; $('sdq-view-qr').innerHTML='<img src="'+url+'" alt="QR Siswa" style="width:228px;height:228px;max-width:100%;border-radius:8px;display:block;"><div style="font-size:11px;color:#71717a;margin-top:8px;word-break:break-all;">'+esc(payload(s))+'</div>'; }catch(e){ $('sdq-view-qr').innerHTML='<span style="color:#dc2626">'+esc(e.message||e)+'</span>'; }
   }
   async function printQrCards(arr){
     if(!arr.length){alert('Tidak ada siswa untuk dicetak.');return;}
@@ -21665,23 +21669,96 @@ console.log('[V13] ✓ Audit Log & Backup → Supabase. Data lama HTML dihapus d
     w.document.open(); w.document.write(html); w.document.close(); setTimeout(function(){try{w.focus();w.print();}catch(e){}},400);
   }
   function stopCam(){ scanning=false; var v=$('sdq-video'); if(v){try{v.pause();}catch(e){} v.srcObject=null; v.style.display='none';} if(stream){stream.getTracks().forEach(function(t){try{t.stop();}catch(e){}}); stream=null;} }
+  function resetScanSession(){ stopCam(); scannedIds.clear(); lastScanTime=0; }
   function scanModal(){
     addStyle(); var m=$('sdq-scan-modal'); if(m) return m;
     m=document.createElement('div'); m.id='sdq-scan-modal'; m.className='sdq-modal';
-    m.innerHTML='<div class="sdq-box"><div class="sdq-head"><div><h3 class="sdq-title">Scan QR Absensi Siswa</h3><div class="sdq-sub">Scan kartu QR siswa, lalu otomatis simpan Hadir.</div></div><button class="sdq-close" id="sdq-scan-close">&times;</button></div><video id="sdq-video" class="sdq-video" playsinline muted></video><canvas id="sdq-canvas" style="display:none"></canvas><div class="sdq-actions"><button class="btn btn-primary" id="sdq-cam" type="button"><i class="ti ti-camera"></i> Buka Kamera</button><button class="btn btn-secondary" id="sdq-stop" type="button">Stop Kamera</button></div><textarea class="sdq-manual" id="sdq-manual" placeholder="Atau tempel isi QR di sini, contoh: SISWA|23|2024001"></textarea><div class="sdq-actions"><button class="btn btn-secondary" id="sdq-process" type="button">Proses Manual</button><button class="btn btn-secondary" id="sdq-scan-close2" type="button">Tutup</button></div><div class="sdq-result" id="sdq-result">Belum ada scan.</div></div>';
+    m.innerHTML='<div class="sdq-box"><div class="sdq-head"><div><h3 class="sdq-title">Scan QR Absensi Siswa</h3><div class="sdq-sub">Kamera otomatis aktif · scan langsung tersimpan sebagai Hadir.</div></div><button class="sdq-close" id="sdq-scan-close">&times;</button></div><video id="sdq-video" class="sdq-video" playsinline muted></video><canvas id="sdq-canvas" style="display:none"></canvas><div class="sdq-actions" id="sdq-cam-actions"><button class="btn btn-primary" id="sdq-cam" type="button"><i class="ti ti-camera"></i> Buka Kamera</button><button class="btn btn-secondary" id="sdq-switch" type="button" style="display:none"><i class="ti ti-switch-horizontal"></i> Ganti Kamera</button><button class="btn btn-secondary" id="sdq-stop" type="button">Stop Kamera</button></div><textarea class="sdq-manual" id="sdq-manual" placeholder="Atau tempel isi QR di sini, contoh: SISWA|23|2024001"></textarea><div class="sdq-actions"><button class="btn btn-secondary" id="sdq-process" type="button">Proses Manual</button><button class="btn btn-secondary" id="sdq-scan-close2" type="button">Tutup</button></div><div class="sdq-result" id="sdq-result">Memulai kamera...</div></div>';
     document.body.appendChild(m);
-    $('sdq-scan-close').onclick=$('sdq-scan-close2').onclick=function(){stopCam();m.classList.remove('show');};
-    $('sdq-stop').onclick=stopCam; $('sdq-cam').onclick=startCam; $('sdq-process').onclick=function(){processScan($('sdq-manual').value);};
+    $('sdq-scan-close').onclick=$('sdq-scan-close2').onclick=function(){resetScanSession();m.classList.remove('show');};
+    $('sdq-stop').onclick=stopCam;
+    $('sdq-cam').onclick=function(){startCam(currentCamIdx);};
+    $('sdq-switch').onclick=function(){currentCamIdx=(currentCamIdx+1)%cameraList.length; startCam(currentCamIdx);};
+    $('sdq-process').onclick=function(){processScan($('sdq-manual').value);};
     return m;
   }
-  async function startCam(){
-    var res=$('sdq-result'); res.innerHTML='Membuka kamera...';
-    if(!('BarcodeDetector' in window)){ res.innerHTML='<b style="color:#dc2626">Browser ini belum mendukung scan kamera langsung.</b><br>Pakai input manual isi QR dulu, atau buka di Chrome terbaru/HP Android.'; return; }
+  async function startCam(camIdx){
+    var res=$('sdq-result');
+    stopCam();
+    res.innerHTML='Membuka kamera...';
+
+    // Deteksi semua kamera saat pertama kali
+    if(!cameraList.length){
+      try{
+        var devs=await navigator.mediaDevices.enumerateDevices();
+        cameraList=devs.filter(function(d){return d.kind==='videoinput';});
+      }catch(e){ cameraList=[]; }
+    }
+
+    // Tampilkan switcher hanya jika ada >1 kamera
+    var switchBtn=$('sdq-switch');
+    if(switchBtn) switchBtn.style.display=cameraList.length>1?'inline-flex':'none';
+
+    // Tentukan constraint kamera: coba pakai deviceId jika ada, fallback ke environment
+    var videoConstraint;
+    if(cameraList.length>1 && cameraList[camIdx]){
+      videoConstraint={deviceId:{exact:cameraList[camIdx].deviceId}};
+    } else {
+      videoConstraint={facingMode:{ideal:'environment'}};  // kamera belakang otomatis
+    }
+
+    // Jika BarcodeDetector tidak tersedia, gunakan fallback jsQR
+    var useBarcode='BarcodeDetector' in window;
+
     try{
-      stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
-      var v=$('sdq-video'); v.srcObject=stream; v.style.display='block'; await v.play(); scanning=true; res.innerHTML='Kamera aktif. Arahkan ke QR siswa.';
-      var detector=new BarcodeDetector({formats:['qr_code']});
-      (async function loop(){ if(!scanning) return; try{ var codes=await detector.detect(v); if(codes&&codes.length){ stopCam(); processScan(codes[0].rawValue); return; } }catch(e){} requestAnimationFrame(loop); })();
+      stream=await navigator.mediaDevices.getUserMedia({video:videoConstraint,audio:false});
+      var v=$('sdq-video'); v.srcObject=stream; v.style.display='block'; await v.play();
+      scanning=true;
+      res.innerHTML='📷 Kamera aktif · Arahkan ke QR siswa.';
+
+
+      // Beep sukses
+      function beep(){ try{ var c=new(window.AudioContext||window.webkitAudioContext)(); var o=c.createOscillator(); var g=c.createGain(); o.connect(g); g.connect(c.destination); o.frequency.value=880; g.gain.value=0.12; o.start(); o.stop(c.currentTime+0.07); }catch(e){} }
+      // Flash hijau pada video
+      function flashOk(){ v.style.outline='4px solid #10b981'; setTimeout(function(){v.style.outline='';},600); }
+
+      if(useBarcode){
+        var detector=new BarcodeDetector({formats:['qr_code']});
+        (async function loop(){
+          if(!scanning) return;
+          var now=Date.now();
+          if(now-lastScanTime>800){
+            try{
+              var codes=await detector.detect(v);
+              if(codes&&codes.length){
+                lastScanTime=now;
+                beep(); flashOk();
+                processScan(codes[0].rawValue);
+                // Kamera TETAP aktif — loop terus berjalan
+              }
+            }catch(e){}
+          }
+          requestAnimationFrame(loop);
+        })();
+      } else {
+        // Fallback jsQR
+        try{ await loadScript('https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js',function(){return!!window.jsQR;}); }catch(e){}
+        var canvas=$('sdq-canvas'), ctx=canvas.getContext('2d');
+        setInterval(function(){
+          if(!scanning) return;
+          var now=Date.now();
+          if(now-lastScanTime<800) return;
+          try{
+            canvas.width=v.videoWidth; canvas.height=v.videoHeight;
+            ctx.drawImage(v,0,0);
+            var img=ctx.getImageData(0,0,canvas.width,canvas.height);
+            if(window.jsQR){
+              var code=jsQR(img.data,img.width,img.height,{inversionAttempts:'dontInvert'});
+              if(code){ lastScanTime=now; beep(); flashOk(); processScan(code.data); }
+            }
+          }catch(e){}
+        },200);
+      }
     }catch(e){ res.innerHTML='<b style="color:#dc2626">Kamera tidak bisa dibuka.</b><br><span style="font-size:12px;color:#71717a">'+esc(e.message||e)+'</span>'; }
   }
   async function processScan(text){
@@ -21690,6 +21767,15 @@ console.log('[V13] ✓ Audit Log & Backup → Supabase. Data lama HTML dihapus d
     var f=parsePayload(text), s=f.siswa; if(!s){res.innerHTML='<b style="color:#dc2626">QR tidak cocok dengan Data Siswa.</b><br><span style="font-size:12px;color:#71717a">Terbaca: '+esc(text)+'</span>';return;}
     var t=today(), kelas=String(s.kelas||''), sid=String(s.id||s._id||'');
     if(!kelas||!sid){res.innerHTML='<b style="color:#dc2626">Data siswa belum lengkap.</b>';return;}
+
+    // Proteksi duplikat — skip jika sudah absen di sesi ini
+    var dupKey=sid+'|'+t;
+    if(scannedIds.has(dupKey)){
+      res.innerHTML='<b style="color:#b45309">⚠️ Sudah tercatat hari ini</b><br><strong>'+esc(s.nama||'-')+'</strong> · '+esc(kelas);
+      return;
+    }
+    scannedIds.add(dupKey);
+
     try{
       if(typeof absensiStore!=='undefined'){
         if(!absensiStore[kelas]) absensiStore[kelas]={}; if(!absensiStore[kelas][t]) absensiStore[kelas][t]={}; absensiStore[kelas][t][sid]='Hadir';
@@ -21700,9 +21786,12 @@ console.log('[V13] ✓ Audit Log & Backup → Supabase. Data lama HTML dihapus d
         if(r&&r.error) throw r.error;
       } else throw new Error('Supabase belum siap.');
       ['renderAbsensiRekap','renderRiwayatAbsensiSiswa','renderRekapSemuaKelas','updateDashboardStats'].forEach(function(n){try{if(typeof window[n]==='function') window[n]();}catch(e){}});
-      res.innerHTML='<b style="color:#047857">Berhasil absen Hadir ✓</b><br><strong>'+esc(s.nama||'-')+'</strong><br>NIS: '+esc(s.nis||'-')+'<br>Kelas: '+esc(kelas)+'<br>Tanggal: '+esc(t);
+      res.innerHTML='<b style="color:#047857">✅ Berhasil absen Hadir</b><br><strong>'+esc(s.nama||'-')+'</strong><br>NIS: '+esc(s.nis||'-')+'<br>Kelas: '+esc(kelas)+'<br>Tanggal: '+esc(t);
       toast('Absensi QR tersimpan: '+(s.nama||'Siswa'),'green');
-    }catch(e){res.innerHTML='<b style="color:#dc2626">Gagal simpan absensi.</b><br>'+esc(e.message||e);}
+    }catch(e){
+      scannedIds.delete(dupKey); // rollback supaya bisa retry
+      res.innerHTML='<b style="color:#dc2626">Gagal simpan absensi.</b><br>'+esc(e.message||e);
+    }
   }
   function patchRows(){
     var page=$('page-siswa'); if(!page) return;
@@ -21718,7 +21807,7 @@ console.log('[V13] ✓ Audit Log & Backup → Supabase. Data lama HTML dihapus d
       var tb=ps.querySelector('.toolbar'); if(tb&&!$('sdq-print-filter')){ var b2=document.createElement('button'); b2.id='sdq-print-filter'; b2.type='button'; b2.className='btn btn-secondary'; b2.innerHTML='<i class="ti ti-printer"></i> Print QR (Filter)'; b2.onclick=function(){printQrCards(listSiswa());}; tb.appendChild(b2); }
       patchRows();
     }
-    var pa=$('page-absensi-siswa'); if(pa&&!$('sdq-open-scan')){ var input=$('btn-input-absensi-siswa'); var b3=document.createElement('button'); b3.id='sdq-open-scan'; b3.type='button'; b3.className='btn btn-secondary'; b3.innerHTML='<i class="ti ti-qrcode"></i> Scan QR Siswa'; b3.onclick=function(){scanModal().classList.add('show');}; if(input&&input.parentNode) input.parentNode.appendChild(b3); else pa.querySelector('.page-header').appendChild(b3); }
+    var pa=$('page-absensi-siswa'); if(pa&&!$('sdq-open-scan')){ var input=$('btn-input-absensi-siswa'); var b3=document.createElement('button'); b3.id='sdq-open-scan'; b3.type='button'; b3.className='btn btn-secondary'; b3.innerHTML='<i class="ti ti-qrcode"></i> Scan QR Siswa'; b3.onclick=function(){var mo=scanModal(); mo.classList.add('show'); setTimeout(function(){startCam(currentCamIdx);},200);}; if(input&&input.parentNode) input.parentNode.appendChild(b3); else pa.querySelector('.page-header').appendChild(b3); }
   }
   function boot(){ addButtons(); setTimeout(addButtons,800); setTimeout(addButtons,2200); try{ new MutationObserver(function(){patchRows();}).observe(document.body,{childList:true,subtree:true}); }catch(e){} }
   window.sdplusQrSiswaFinalSafe = {addButtons:addButtons,showQr:showQr,scan:function(){scanModal().classList.add('show');}};
