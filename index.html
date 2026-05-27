@@ -6073,8 +6073,8 @@
       </div>
     </div>
   </div></div>
-  <div id="page-pengguna" class="page-view"><div class="page-header"><h2>Pengguna & Hak Akses</h2><button class="btn btn-primary" onclick="showModalPengguna()"><i class="ti ti-plus"></i> Tambah Pengguna</button></div><div class="card"><div class="card-body" style="padding:0;"><table class="data-table"><thead><tr><th>Nama</th><th>Username</th><th>Role</th><th>Terakhir Login</th><th>Status</th><th>Aksi</th></tr></thead><tbody><tr><td><strong>Ahmad Dahlan</strong></td><td class="nis-badge">admin.dahlan</td><td><span style="background:var(--purple-50);color:var(--purple-400);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">Admin</span></td><td style="color:var(--gray-500);font-size:12px;">Hari ini</td><td><span class="status-badge aktif">Aktif</span></td><td><button class="action-btn edit" onclick="editPengguna(this,'Ahmad Dahlan','admin.dahlan','Admin')">Edit</button><button class="action-btn delete" onclick="hapusPengguna(this)">Hapus</button></td></tr><tr><td><strong>Sri Wahyuni</strong></td><td class="nis-badge">guru.wahyuni</td><td><span style="background:var(--green-50);color:var(--green-700);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">Guru</span></td><td style="color:var(--gray-500);font-size:12px;">22 Mei 2025</td><td><span class="status-badge aktif">Aktif</span></td><td><button class="action-btn edit" onclick="editPengguna(this,'Sri Wahyuni','guru.wahyuni','Guru')">Edit</button><button class="action-btn delete" onclick="hapusPengguna(this)">Hapus</button></td></tr><tr><td><strong>Dwi Hastuti</strong></td><td class="nis-badge">tata.usaha</td><td><span style="background:var(--blue-50);color:var(--blue-600);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">TU</span></td><td style="color:var(--gray-500);font-size:12px;">21 Mei 2025</td><td><span class="status-badge aktif">Aktif</span></td><td><button class="action-btn edit" onclick="editPengguna(this,'Dwi Hastuti','tata.usaha','TU')">Edit</button><button class="action-btn delete" onclick="hapusPengguna(this)">Hapus</button></td></tr></tbody></table></div></div></div>
-  <div id="page-audit" class="page-view"><div class="page-header"><h2>Audit Log</h2><button class="btn btn-secondary" onclick="exportAuditLog()"><i class="ti ti-download"></i> Export Log</button></div><div class="card"><div class="card-header"><div class="card-title">Aktivitas Sistem Terbaru</div><select onchange="filterAuditLog(this.value)" style="padding:6px 10px;border:1px solid var(--gray-300);border-radius:var(--radius-md);font-size:12px;"><option value="all">Semua Aktivitas</option><option value="login">Login/Logout</option><option value="edit">Edit Data</option><option value="hapus">Hapus Data</option></select></div><div class="card-body" style="padding:0;"><table class="data-table"><thead><tr><th>Waktu</th><th>Pengguna</th><th>Aktivitas</th><th>Detail</th><th>IP Address</th></tr></thead><tbody id="tbody-audit"><tr><td style="color:var(--gray-500);font-size:12px;">24 Mei 2025 09:42</td><td><strong>admin.dahlan</strong></td><td><span style="background:var(--green-50);color:var(--green-700);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">LOGIN</span></td><td>Login berhasil</td><td style="font-family:monospace;font-size:12px;">192.168.1.10</td></tr><tr><td style="color:var(--gray-500);font-size:12px;">24 Mei 2025 09:38</td><td><strong>guru.wahyuni</strong></td><td><span style="background:var(--blue-50);color:var(--blue-600);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">EDIT</span></td><td>Update data siswa NIS 240487</td><td style="font-family:monospace;font-size:12px;">192.168.1.25</td></tr><tr><td style="color:var(--gray-500);font-size:12px;">24 Mei 2025 09:15</td><td><strong>tata.usaha</strong></td><td><span style="background:var(--amber-50);color:var(--amber-400);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">CREATE</span></td><td>Catat transaksi keuangan +Rp 4.200.000</td><td style="font-family:monospace;font-size:12px;">192.168.1.18</td></tr><tr><td style="color:var(--gray-500);font-size:12px;">23 Mei 2025 16:24</td><td><strong>admin.dahlan</strong></td><td><span style="background:var(--coral-50);color:var(--coral-400);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">DELETE</span></td><td>Hapus pengguna inactive</td><td style="font-family:monospace;font-size:12px;">192.168.1.10</td></tr><tr><td style="color:var(--gray-500);font-size:12px;">23 Mei 2025 15:10</td><td><strong>guru.wahyuni</strong></td><td><span style="background:var(--green-50);color:var(--green-700);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">LOGIN</span></td><td>Login berhasil</td><td style="font-family:monospace;font-size:12px;">192.168.1.25</td></tr></tbody></table></div></div></div>
+  <div id="page-pengguna" class="page-view"><div class="page-header"><h2>Pengguna & Hak Akses</h2><button class="btn btn-primary" onclick="showModalPengguna()"><i class="ti ti-plus"></i> Tambah Pengguna</button></div><div class="card"><div class="card-body" style="padding:0;"><table class="data-table"><thead><tr><th>Nama</th><th>Username</th><th>Role</th><th>Terakhir Login</th><th>Status</th><th>Aksi</th></tr></thead><tbody><tr><td><strong>Ahmad Dahlan</strong></td><td class="nis-badge">admin</td><td><span style="background:var(--purple-50);color:var(--purple-400);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">Admin</span></td><td style="color:var(--gray-500);font-size:12px;">Hari ini</td><td><span class="status-badge aktif">Aktif</span></td><td><button class="action-btn edit" onclick="editPengguna(this,'Ahmad Dahlan','admin','Admin')">Edit</button><button class="action-btn delete" onclick="hapusPengguna(this)">Hapus</button></td></tr><tr><td><strong>Sri Wahyuni</strong></td><td class="nis-badge">guru.wahyuni</td><td><span style="background:var(--green-50);color:var(--green-700);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">Guru</span></td><td style="color:var(--gray-500);font-size:12px;">22 Mei 2025</td><td><span class="status-badge aktif">Aktif</span></td><td><button class="action-btn edit" onclick="editPengguna(this,'Sri Wahyuni','guru.wahyuni','Guru')">Edit</button><button class="action-btn delete" onclick="hapusPengguna(this)">Hapus</button></td></tr><tr><td><strong>Dwi Hastuti</strong></td><td class="nis-badge">tata.usaha</td><td><span style="background:var(--blue-50);color:var(--blue-600);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">TU</span></td><td style="color:var(--gray-500);font-size:12px;">21 Mei 2025</td><td><span class="status-badge aktif">Aktif</span></td><td><button class="action-btn edit" onclick="editPengguna(this,'Dwi Hastuti','tata.usaha','TU')">Edit</button><button class="action-btn delete" onclick="hapusPengguna(this)">Hapus</button></td></tr></tbody></table></div></div></div>
+  <div id="page-audit" class="page-view"><div class="page-header"><h2>Audit Log</h2><button class="btn btn-secondary" onclick="exportAuditLog()"><i class="ti ti-download"></i> Export Log</button></div><div class="card"><div class="card-header"><div class="card-title">Aktivitas Sistem Terbaru</div><select onchange="filterAuditLog(this.value)" style="padding:6px 10px;border:1px solid var(--gray-300);border-radius:var(--radius-md);font-size:12px;"><option value="all">Semua Aktivitas</option><option value="login">Login/Logout</option><option value="edit">Edit Data</option><option value="hapus">Hapus Data</option></select></div><div class="card-body" style="padding:0;"><table class="data-table"><thead><tr><th>Waktu</th><th>Pengguna</th><th>Aktivitas</th><th>Detail</th><th>IP Address</th></tr></thead><tbody id="tbody-audit"><tr><td style="color:var(--gray-500);font-size:12px;">24 Mei 2025 09:42</td><td><strong>admin</strong></td><td><span style="background:var(--green-50);color:var(--green-700);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">LOGIN</span></td><td>Login berhasil</td><td style="font-family:monospace;font-size:12px;">192.168.1.10</td></tr><tr><td style="color:var(--gray-500);font-size:12px;">24 Mei 2025 09:38</td><td><strong>guru.wahyuni</strong></td><td><span style="background:var(--blue-50);color:var(--blue-600);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">EDIT</span></td><td>Update data siswa NIS 240487</td><td style="font-family:monospace;font-size:12px;">192.168.1.25</td></tr><tr><td style="color:var(--gray-500);font-size:12px;">24 Mei 2025 09:15</td><td><strong>tata.usaha</strong></td><td><span style="background:var(--amber-50);color:var(--amber-400);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">CREATE</span></td><td>Catat transaksi keuangan +Rp 4.200.000</td><td style="font-family:monospace;font-size:12px;">192.168.1.18</td></tr><tr><td style="color:var(--gray-500);font-size:12px;">23 Mei 2025 16:24</td><td><strong>admin</strong></td><td><span style="background:var(--coral-50);color:var(--coral-400);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">DELETE</span></td><td>Hapus pengguna inactive</td><td style="font-family:monospace;font-size:12px;">192.168.1.10</td></tr><tr><td style="color:var(--gray-500);font-size:12px;">23 Mei 2025 15:10</td><td><strong>guru.wahyuni</strong></td><td><span style="background:var(--green-50);color:var(--green-700);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">LOGIN</span></td><td>Login berhasil</td><td style="font-family:monospace;font-size:12px;">192.168.1.25</td></tr></tbody></table></div></div></div>
   <div id="page-pengaturan" class="page-view"><div class="page-header"><h2>Pengaturan Sistem</h2></div><div class="card"><div class="card-body"><div class="form-grid"><div class="form-group"><label>Nama Sekolah</label><input type="text" id="set-nama-sekolah" value="SD Negeri Maju Bersama"></div><div class="form-group"><label>NSS</label><input type="text" id="set-nss" value="101056001001"></div><div class="form-group"><label>Kepala Sekolah</label><input type="text" id="set-kepsek" value="Drs. Suryanto, M.Pd"></div><div class="form-group"><label>Kota/Kabupaten</label><input type="text" id="set-kota" value="Surabaya"></div><div class="form-group" style="grid-column:1/-1"><label>Alamat</label><input type="text" id="set-alamat" value="Jl. Kenanga No. 45, Sukolilo, Surabaya"></div></div><div style="margin-top:16px;display:flex;gap:10px;"><button class="btn btn-primary" onclick="simpanPengaturan()"><i class="ti ti-device-floppy"></i> Simpan Pengaturan</button><button class="btn btn-secondary" onclick="resetPengaturan()">Reset</button></div></div></div></div>
   <div id="page-backup" class="page-view"><div class="page-header"><h2>Backup & Keamanan</h2><button class="btn btn-primary" onclick="lakukanBackup()"><i class="ti ti-download"></i> Backup Sekarang</button></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px;"><div class="stat-card green"><div class="stat-icon green"><i class="ti ti-database"></i></div><div class="stat-value">2.4 GB</div><div class="stat-label">Total Data</div></div><div class="stat-card blue"><div class="stat-icon blue"><i class="ti ti-clock"></i></div><div class="stat-value" id="last-backup-time">Hari ini 06:00</div><div class="stat-label">Backup Terakhir</div></div><div class="stat-card amber"><div class="stat-icon amber"><i class="ti ti-shield-check"></i></div><div class="stat-value">Aktif</div><div class="stat-label">Auto Backup</div></div></div><div class="card"><div class="card-header"><div class="card-title">Riwayat Backup</div></div><div class="card-body" style="padding:0;"><table class="data-table"><thead><tr><th>Tanggal</th><th>Nama File</th><th>Ukuran</th><th>Tipe</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="tbody-backup"><tr><td style="color:var(--gray-500);font-size:12px;">24 Mei 2025 06:00</td><td class="nis-badge">backup_20250524.sql</td><td>2.4 GB</td><td><span style="background:var(--green-50);color:var(--green-700);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">Otomatis</span></td><td><span class="status-badge aktif">Sukses</span></td><td><button class="action-btn view" onclick="unduhBackup('backup_20250524.sql')">Unduh</button><button class="action-btn edit" onclick="restoreBackup('24 Mei 2025')">Restore</button></td></tr><tr><td style="color:var(--gray-500);font-size:12px;">23 Mei 2025 06:00</td><td class="nis-badge">backup_20250523.sql</td><td>2.3 GB</td><td><span style="background:var(--green-50);color:var(--green-700);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">Otomatis</span></td><td><span class="status-badge aktif">Sukses</span></td><td><button class="action-btn view" onclick="unduhBackup('backup_20250523.sql')">Unduh</button><button class="action-btn edit" onclick="restoreBackup('23 Mei 2025')">Restore</button></td></tr><tr><td style="color:var(--gray-500);font-size:12px;">22 Mei 2025 14:30</td><td class="nis-badge">backup_20250522_manual.sql</td><td>2.3 GB</td><td><span style="background:var(--blue-50);color:var(--blue-600);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">Manual</span></td><td><span class="status-badge aktif">Sukses</span></td><td><button class="action-btn view" onclick="unduhBackup('backup_20250522_manual.sql')">Unduh</button><button class="action-btn edit" onclick="restoreBackup('22 Mei 2025')">Restore</button></td></tr></tbody></table></div></div></div>
   <div id="page-tahun-ajaran" class="page-view"><div class="page-header"><h2>Tahun Ajaran & Semester</h2><button class="btn btn-primary" onclick="showModalTahunAjaran()"><i class="ti ti-plus"></i> Buat Tahun Ajaran Baru</button></div><div class="card"><div class="card-body" style="padding:0;"><table class="data-table"><thead><tr><th>Tahun Ajaran</th><th>Semester</th><th>Mulai</th><th>Selesai</th><th>Status</th><th>Aksi</th></tr></thead><tbody><tr><td><strong>2024/2025</strong></td><td>Genap</td><td>6 Jan 2025</td><td>20 Jun 2025</td><td><span style="background:var(--green-50);color:var(--green-700);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">Aktif</span></td><td><button class="action-btn edit" onclick="editTahunAjaran(this,'2024/2025','Genap','2025-01-06','2025-06-20')">Edit</button> <button class="action-btn delete" onclick="hapusTahunAjaran(this)">Hapus</button></td></tr><tr><td><strong>2024/2025</strong></td><td>Ganjil</td><td>15 Jul 2024</td><td>20 Des 2024</td><td><span style="background:var(--gray-100);color:var(--gray-600);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">Selesai</span></td><td><button class="action-btn view" onclick="lihatTahunAjaran('2024/2025','Ganjil','15 Jul 2024','20 Des 2024','Selesai')">Lihat</button> <button class="action-btn delete" onclick="hapusTahunAjaran(this)">Hapus</button></td></tr><tr><td><strong>2023/2024</strong></td><td>Genap</td><td>8 Jan 2024</td><td>22 Jun 2024</td><td><span style="background:var(--gray-100);color:var(--gray-600);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">Selesai</span></td><td><button class="action-btn view" onclick="lihatTahunAjaran('2023/2024','Genap','8 Jan 2024','22 Jun 2024','Selesai')">Lihat</button> <button class="action-btn delete" onclick="hapusTahunAjaran(this)">Hapus</button></td></tr></tbody></table></div></div></div>
@@ -6250,31 +6250,15 @@ function showPage(id, navEl) {
   if(id==='absensi-guru') setTimeout(initAbsensiGuru, 0);
   if(id==='jadwal') setTimeout(function(){
     populateAllKelasSelects(); populateJamSelect();
-    if(!window._jadwalSupabaseLoaded) {
-      window._jadwalSupabaseLoaded = true;
-      // Pakai cache localStorage dulu jika ada
-      var cached = _loadJadwalLocal();
-      if(cached) { Object.keys(jadwalData).forEach(function(k){ delete jadwalData[k]; }); Object.assign(jadwalData, cached); }
-      // Load dari Supabase di background
-      loadJadwalFromSupabase().then(function(ok){ if(ok) renderJadwal(); });
-    }
-    renderJadwal();
+    loadJadwalFromSupabase().then(function(ok){ renderJadwal(); });
   }, 0);
   if(id==='nilai') setTimeout(function(){
     populateAllKelasSelects();
-    if(!window._nilaiSupabaseLoaded) {
-      window._nilaiSupabaseLoaded = true;
-      loadNilaiFromSupabase().then(function(ok){ if(ok) renderNilai(); });
-    }
-    renderNilai();
+    loadNilaiFromSupabase().then(function(ok){ renderNilai(); });
   }, 0);
   if(id==='kalender') setTimeout(function(){
     initLiburNasionalAPI();
-    if(!window._kalenderSupabaseLoaded) {
-      window._kalenderSupabaseLoaded = true;
-      loadKalenderFromSupabase().then(function(ok){ if(ok) renderKalender(); });
-    }
-    renderKalender();
+    loadKalenderFromSupabase().then(function(ok){ renderKalender(); });
   }, 0);
   if(id==='pelanggaran') setTimeout(function(){ if(typeof initPelanggaran === 'function') initPelanggaran(); }, 0);
   if(id==='perpustakaan') setTimeout(function(){ renderBuku(); showTabPerp('koleksi'); }, 0);
@@ -6295,11 +6279,10 @@ function showPage(id, navEl) {
   if(id==='mutasi') setTimeout(loadMutasiFromSupabase, 0);
   if(id==='absensi-siswa') setTimeout(function(){
     populateAllKelasSelects();
-    if(!window._absensiSiswaSupabaseLoaded) {
-      window._absensiSiswaSupabaseLoaded = true;
-      loadAbsensiSiswaFromSupabase().then(function(ok){ if(ok) renderAbsensiRekap(); });
-    }
-    renderAbsensiRekap();
+    // Selalu load ulang dari Supabase setiap buka halaman supaya data terbaru
+    loadAbsensiSiswaFromSupabase().then(function(ok){
+      renderAbsensiRekap();
+    });
   }, 0);
 }
 
@@ -6329,16 +6312,7 @@ window.addEventListener('resize', checkMobile);
 checkMobile();
 
 // ══════════ ABSENSI GURU ══════════
-const guruList = [
-  {nip:'197504122005011003',nama:'Drs. Suryanto, M.Pd',jabatan:'Kepala Sekolah'},
-  {nip:'198202152008012012',nama:'Sri Wahyuni, S.Pd',jabatan:'Guru Kelas IV-A'},
-  {nip:'198807302010012019',nama:'Ahmad Rifa\'i, S.Pd.I',jabatan:'Guru PAI'},
-  {nip:'199001152015012021',nama:'Dewi Rahayu, S.Pd',jabatan:'Guru Kelas I-A'},
-  {nip:'198506202012011008',nama:'Hendra Wijaya, S.Pd',jabatan:'Guru PJOK'},
-  {nip:'199203142016012015',nama:'Nurul Hidayah, S.Pd',jabatan:'Guru Kelas III-B'},
-  {nip:'198812102014012009',nama:'Rina Susanti, S.Pd',jabatan:'Guru Kelas II-A'},
-  {nip:'197810052003011004',nama:'Bambang Sutrisno',jabatan:'Tata Usaha'},
-];
+const guruList = []; // data diambil dari Supabase
 
 // Struktur baru: absensiGuruData[tanggal][sesi][nip]
 // Dengan struktur ini, absensi tanggal/sesi berbeda tidak saling menimpa.
@@ -9818,44 +9792,39 @@ function _saveAbsensiSiswaLocal() {
 
 // Load dari Supabase — rebuild absensiStore dari tabel absensi_siswa
 async function loadAbsensiSiswaFromSupabase() {
-  if(!window.db || !db.select) return false;
-  try {
-    var res = await db.select('absensi_siswa');
-    if(res.error) { console.warn('[AbsenSiswa] Load gagal:', res.error.message); return false; }
-    var rows = res.data || [];
-    if(!rows.length) return false;
-    // Bersihkan store lalu rebuild
-    Object.keys(absensiStore).forEach(function(k){ delete absensiStore[k]; });
-    rows.forEach(function(r) {
-      var kelas = r.kelas || '';
-      var tgl   = r.tanggal || '';
-      var siswaId = String(r.siswa_id || r.siswaId || '');
-      var status  = r.status || 'Hadir';
-      if(!kelas || !tgl || !siswaId) return;
-      if(!absensiStore[kelas]) absensiStore[kelas] = {};
-      if(!absensiStore[kelas][tgl]) absensiStore[kelas][tgl] = {};
-      absensiStore[kelas][tgl][siswaId] = status;
-    });
-    _saveAbsensiSiswaLocal();
-    return true;
-  } catch(e) { console.warn('[AbsenSiswa] Error:', e); return false; }
+  if(!window.db || typeof db.select !== 'function') {
+    console.warn('[AbsenSiswa] Supabase belum siap.');
+    return false;
+  }
+  const { data, error } = await db.select('absensi_siswa');
+  if(error) { console.error('[AbsenSiswa] Gagal load:', error.message); return false; }
+  if(!data || !data.length) return false;
+  // Bersihkan store lalu rebuild
+  Object.keys(absensiStore).forEach(function(k){ delete absensiStore[k]; });
+  data.forEach(function(r) {
+    const kelas   = r.kelas || '';
+    const tgl     = r.tanggal || '';
+    const siswaId = String(r.siswa_id || '');
+    const status  = r.status || 'Hadir';
+    if(!kelas || !tgl || !siswaId) return;
+    if(!absensiStore[kelas]) absensiStore[kelas] = {};
+    if(!absensiStore[kelas][tgl]) absensiStore[kelas][tgl] = {};
+    absensiStore[kelas][tgl][siswaId] = status;
+  });
+  _saveAbsensiSiswaLocal();
+  return true;
 }
 
 // Simpan satu sesi absensi ke Supabase
 async function saveAbsensiSiswaToSupabase(kelas, tgl, rekHari) {
-  if(!window.db || (!db.upsert && !db.insert)) return;
-  try {
-    var nips = Object.keys(rekHari);
-    for(var i = 0; i < nips.length; i++) {
-      var siswaId = nips[i];
-      var payload = { kelas: kelas, tanggal: tgl, siswa_id: siswaId, status: rekHari[siswaId] };
-      if(db.upsert) {
-        await db.upsert('absensi_siswa', payload, 'kelas,tanggal,siswa_id');
-      } else {
-        await db.insert('absensi_siswa', payload);
-      }
-    }
-  } catch(e) { console.warn('[AbsenSiswa] Gagal simpan Supabase:', e); }
+  if(!window.db || typeof db.upsert !== 'function') return;
+  const siswaIds = Object.keys(rekHari);
+  for(var i = 0; i < siswaIds.length; i++) {
+    const siswaId = siswaIds[i];
+    const payload = { kelas: kelas, tanggal: tgl, siswa_id: siswaId, status: rekHari[siswaId] };
+    const { error } = await db.upsert('absensi_siswa', payload, 'kelas,tanggal,siswa_id');
+    if(error) { console.error('[AbsenSiswa] Gagal simpan:', error.message); }
+  }
 }
 
 function absKey(kelas, tgl) { return kelas + '|' + tgl; }
@@ -10001,6 +9970,33 @@ function onAbsKelasModalChange() {
   }).join('');
 }
 
+async function resetAbsensiSiswa() {
+  const tgl   = document.getElementById('abs-tanggal')?.value;
+  const kelas = document.getElementById('abs-kelas')?.value;
+  const scope = tgl ? ('kelas ' + kelas + ' tanggal ' + tgl) : ('semua data kelas ' + kelas);
+  if(!confirm('Reset absensi ' + scope + '?\nData akan dihapus dari localStorage dan Supabase.')) return;
+
+  // Hapus dari memory & localStorage
+  if(tgl) {
+    if(absensiStore[kelas]) delete absensiStore[kelas][tgl];
+  } else {
+    delete absensiStore[kelas];
+  }
+  _saveAbsensiSiswaLocal();
+
+  // Hapus dari Supabase
+  if(window.db && window.supa) {
+    let q = window.supa.from('absensi_siswa').delete().eq('kelas', kelas);
+    if(tgl) q = q.eq('tanggal', tgl);
+    const { error } = await q;
+    if(error) { console.error('[Reset Absensi]', error.message); showToast('Gagal hapus dari Supabase: ' + error.message, 'red'); return; }
+  }
+
+  // Refresh tampilan tabel absensi
+  onAbsKelasModalChange();
+  if(typeof showToast === 'function') showToast('Absensi ' + scope + ' berhasil direset.', 'green');
+}
+
 function simpanAbsensiSiswa() {
   if(!requireGuruUntukAbsensiSiswa()) return;
   setAbsensiSiswaKelasUntukGuru();
@@ -10091,6 +10087,29 @@ function switchAbsTab(n) {
   }
   if (n === 2) renderRiwayatAbsensiSiswa();
   if (n === 3) renderRekapSemuaKelas();
+}
+
+async function resetAbsensiRiwayat(kelas, tgl) {
+  const tglFmt = new Date(tgl).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+  if(!confirm('Reset absensi ' + kelas + ' tanggal ' + tglFmt + '?\nData dihapus dari localStorage dan Supabase.')) return;
+
+  // Hapus dari memory & localStorage
+  if(absensiStore[kelas] && absensiStore[kelas][tgl]) {
+    delete absensiStore[kelas][tgl];
+    if(!Object.keys(absensiStore[kelas]).length) delete absensiStore[kelas];
+  }
+  _saveAbsensiSiswaLocal();
+
+  // Hapus dari Supabase
+  if(window.supa) {
+    const { error } = await window.supa.from('absensi_siswa').delete().eq('kelas', kelas).eq('tanggal', tgl);
+    if(error) { showToast('Gagal hapus dari Supabase: ' + error.message, 'red'); return; }
+  }
+
+  renderRiwayatAbsensiSiswa();
+  if(typeof renderRekapSemuaKelas === 'function') renderRekapSemuaKelas();
+  if(typeof updateDashboardStats === 'function') updateDashboardStats();
+  showToast('Absensi ' + kelas + ' tanggal ' + tglFmt + ' berhasil direset.', 'green');
 }
 
 function renderRiwayatAbsensiSiswa() {
@@ -12015,7 +12034,7 @@ function exportAuditLog() {
 
 // === FIX BUG #28: helper untuk menambah baris audit log saat user beraktivitas ===
 // Pemakai login simulasi (bisa diganti kalau ada sistem login asli)
-let _currentUser = 'admin.dahlan';
+let _currentUser = 'admin';
 let _currentIp = '192.168.1.10';
 function tambahAuditLog(aktivitas, detail) {
   try {
@@ -12089,16 +12108,15 @@ function _applyPengaturan(p) {
 })();
 
 async function loadPengaturanFromSupabase() {
-  if(!window.db || !db.select) return false;
-  try {
-    var res = await db.select('pengaturan_sekolah');
-    if(res.error || !res.data || !res.data.length) return false;
-    var r = res.data[0];
-    var p = { namaSekolah: r.nama_sekolah, nss: r.nss, kepsek: r.kepsek, kota: r.kota, alamat: r.alamat, _id: r.id };
-    try { localStorage.setItem(PENGATURAN_KEY, JSON.stringify(p)); } catch(e) {}
-    _applyPengaturan(p);
-    return true;
-  } catch(e) { return false; }
+  if(!window.db || typeof db.select !== 'function') return false;
+  const { data, error } = await db.select('pengaturan_sekolah');
+  if(error) { console.warn('[Pengaturan] Gagal load:', error.message); return false; }
+  if(!data || !data.length) return false;
+  const r = data[0];
+  const p = { namaSekolah: r.nama_sekolah, nss: r.nss, kepsek: r.kepsek, kota: r.kota, alamat: r.alamat, _id: r.id };
+  try { localStorage.setItem(PENGATURAN_KEY, JSON.stringify(p)); } catch(e) {}
+  _applyPengaturan(p);
+  return true;
 }
 
 async function simpanPengaturan() {
@@ -12115,15 +12133,17 @@ async function simpanPengaturan() {
   // Simpan ke localStorage
   try { localStorage.setItem(PENGATURAN_KEY, JSON.stringify(p)); } catch(e) {}
   // Simpan ke Supabase
-  if(window.db) {
-    try {
-      const existing = window.pengaturanSekolah?._id;
-      const payload = { nama_sekolah: p.namaSekolah, nss: p.nss, kepsek: p.kepsek, kota: p.kota, alamat: p.alamat };
-      if(existing && db.update) await db.update('pengaturan_sekolah', existing, payload);
-      else if(db.upsert) await db.upsert('pengaturan_sekolah', payload, 'id');
-      else if(db.insert) { var res = await db.insert('pengaturan_sekolah', payload); if(res.data?.id) p._id = res.data.id; }
-      p._id = p._id || window.pengaturanSekolah?._id;
-    } catch(e) { console.warn('[Pengaturan] Gagal simpan Supabase:', e); }
+  if(window.db && typeof db.upsert === 'function') {
+    const dbPayload = { nama_sekolah: p.namaSekolah, nss: p.nss, kepsek: p.kepsek, kota: p.kota, alamat: p.alamat };
+    const existing = window.pengaturanSekolah && window.pengaturanSekolah._id;
+    if(existing && typeof db.update === 'function') {
+      const { error } = await db.update('pengaturan_sekolah', existing, dbPayload);
+      if(error) console.warn('[Pengaturan] Gagal update:', error.message);
+    } else {
+      const { data: saved, error } = await db.insert('pengaturan_sekolah', dbPayload);
+      if(error) console.warn('[Pengaturan] Gagal insert:', error.message);
+      else if(saved && saved.id) p._id = saved.id;
+    }
   }
   window.pengaturanSekolah = p;
   showToast('Pengaturan tersimpan & diterapkan ke sistem!', 'green');
@@ -12319,60 +12339,10 @@ function lihatTahunAjaran(tahun, semester, mulai, selesai, status) {
 }
 
 // ══════════ PAGINATION SISWA (487 siswa) ══════════
-// Pool data realistis untuk men-generate 487 siswa
-const _firstM = ['Ahmad','Muhammad','Rizki','Bagas','Fajar','Reza','Andi','Arya','Bayu','Dimas','Eko','Hendra','Ilham','Joko','Lukman','Putra','Rendi','Rizal','Yusuf','Aditya','Bambang','Budi','Cahya','Dani','Faisal','Galih','Hadi','Ian','Krisna','Maulana','Nanda','Oki','Pradana','Raka','Surya','Teguh','Wahyu','Yudha','Zaki','Bintang','Hanif','Iqbal'];
-const _firstF = ['Aisyah','Siti','Nadia','Putri','Zahra','Salsabila','Dewi','Nabila','Anisa','Aulia','Fatimah','Hana','Indah','Khairunnisa','Laila','Maya','Nur','Rina','Sari','Wulan','Yasmin','Amelia','Bunga','Citra','Dinda','Eka','Farah','Gita','Hesti','Intan','Jihan','Kirana','Lina','Mutiara','Nayla','Olivia','Pratiwi','Qonita','Ranti','Syifa'];
-const _last = ['Putri','Ramadhani','Maharani','Saputra','Pratama','Wijaya','Hidayat','Hakim','Santoso','Susanto','Setiawan','Kusuma','Permata','Anggraeni','Pertiwi','Lestari','Nugroho','Wibowo','Hartono','Sasmita','Pangestu','Adiwijaya','Mahendra','Bagaskara','Az-Zahra','Pradipta','Cahyani','Anjani','Khairani','Sulaeman','Firdaus','Ananda','Arifin','Rahman','Sholeh','Hasanah','Ariesta','Wardhana','Dewanto','Prasetya'];
-const _wali = ['Siti Rahayu','Budi Santoso','Eko Prasetyo','Agus Dewanto','Ahmad Fauzi','Hendra Wijaya','Joko Saputra','Yusuf Hakim','Bambang Pratama','Rahmat Hidayat','Wahyu Hidayat','Sutrisno','Andi Pradana','Lukman Hakim','Indra Maulana','Sumarno','Tri Wahyudi','Dedi Setiawan','Faisal Rahman','Bayu Aji','Hartono','Suparman','Imam Susilo','Marwan','Nurhadi','Purnomo','Rahmadi','Surono','Tarmidzi','Untung','Vincentius','Wagiman','Yanto','Zulkarnain','Ali Rohman','Bachtiar','Cipto','Darmadi','Edi Susanto','Firman','Gunawan','Hardiman'];
-const _kotaTTL = ['Surabaya','Sidoarjo','Gresik','Malang','Mojokerto','Lamongan','Pasuruan','Probolinggo','Jombang','Tuban','Bojonegoro','Madiun','Kediri','Blitar','Banyuwangi','Jember'];
-const _bulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-const _kelasList = ['I-A','I-B','II-A','II-B','III-A','III-B','IV-A','IV-B','IV-C','V-A','V-B','VI-A','VI-B'];
-
-// Deterministic pseudo-random — generate identik tiap reload
-function _rnd(seed) {
-  let x = Math.sin(seed*9301 + 49297) * 233280;
-  return x - Math.floor(x);
-}
-function _pick(arr, seed) { return arr[Math.floor(_rnd(seed)*arr.length)]; }
-
-// Generate 487 siswa
-const TOTAL_SISWA_AWAL = 487;
+// Data siswa diambil dari Supabase
 const SISWA_PER_PAGE = 10;
 const siswaList = [];
 let _nextSiswaId = 1;
-(function genSiswa(){
-  for(let i=0;i<TOTAL_SISWA_AWAL;i++) {
-    const s = i+1;
-    const isMale = _rnd(s*7) < 0.515; // sedikit lebih banyak laki-laki, sesuai stat (251 vs 236)
-    const firstName = isMale ? _pick(_firstM, s*3) : _pick(_firstF, s*5);
-    const midName = (_rnd(s*11) < 0.6) ? ' ' + (isMale ? _pick(_firstM, s*13) : _pick(_firstF, s*17)) : '';
-    const lastName = ' ' + _pick(_last, s*19);
-    const nama = (firstName + midName + lastName).trim();
-    const kelas = _pick(_kelasList, s*23);
-    // Tentukan tahun lahir berdasar tingkat kelas (kelas I=2019, II=2018, ..., VI=2013)
-    const tingkat = parseInt(kelas.split('-')[0].replace(/[VI]/g,m=>({V:5,I:1})[m]||''),10) || 1;
-    // simple roman map
-    const romanMap = {'I':1,'II':2,'III':3,'IV':4,'V':5,'VI':6};
-    const tingkatNum = romanMap[kelas.split('-')[0]] || 1;
-    const tahunLahir = 2025 - 6 - tingkatNum + 1; // kls I→2019, kls VI→2014
-    const bulanIdx = Math.floor(_rnd(s*29)*12);
-    const tgl = Math.floor(_rnd(s*31)*28)+1;
-    const ttl = _pick(_kotaTTL, s*37) + ', ' + tgl + ' ' + _bulan[bulanIdx] + ' ' + tahunLahir;
-    // Status: 90% Aktif, 5% Baru (kelas I), 3% Lulus (kelas VI), 2% Nonaktif
-    let status = 'Aktif';
-    const rs = _rnd(s*41);
-    if(tingkatNum===1 && rs<0.3) status = 'Baru';
-    else if(tingkatNum===6 && rs<0.05) status = 'Lulus';
-    else if(rs>0.98) status = 'Nonaktif';
-    // NIS: prefix berdasar tahun masuk (kelas I=24, II=23, III=22, IV=21, V=20, VI=19)
-    const nisPrefix = String(25 - tingkatNum);
-    const nisSeq = String(Math.floor(_rnd(s*43)*900)+100);
-    const nis = nisPrefix + nisSeq + String(s).padStart(3,'0').slice(-3);
-    const wali = _pick(_wali, s*47);
-    const hp = '0812' + String(Math.floor(_rnd(s*53)*9000000)+1000000);
-    siswaList.push({_id: _nextSiswaId++, no:s, nis, nama, kelas, jk: isMale?'Laki-laki':'Perempuan', ttl, wali, hp, status});
-  }
-})();
 
 let currentSiswaPage = 1;
 let totalSiswaPages = Math.ceil(siswaList.length / SISWA_PER_PAGE);
@@ -12666,12 +12636,21 @@ async function loadSiswaFromSupabase() {
   if(error) {
     console.error('[SIAKAD] Gagal memuat siswa dari Supabase:', error.message);
     showToast('Gagal memuat siswa dari Supabase: ' + error.message, 'red');
+    // Jangan hapus data lokal jika ada error
     refreshSiswaView();
     return;
   }
 
+  // Jika Supabase mengembalikan data kosong, pertahankan data lokal yang sudah ada
+  if (!data || data.length === 0) {
+    console.warn('[SIAKAD] Tabel siswa di Supabase kosong — memakai data lokal.');
+    refreshSiswaView();
+    if (typeof updateDashboardStats === 'function') updateDashboardStats();
+    return;
+  }
+
   siswaList.length = 0;
-  (data || []).forEach((row, i) => siswaList.push(normalisasiSiswaSupabase(row, i)));
+  data.forEach((row, i) => siswaList.push(normalisasiSiswaSupabase(row, i)));
   currentSiswaPage = 1;
   refreshSiswaView();
   if (typeof updateDashboardStats === 'function') updateDashboardStats();
@@ -14646,26 +14625,65 @@ function showToastInfo(html, duration) {
 
 var usersData = [];
 const USERS_KEY = 'sdplus_users_v1';
+// Tabel pusat pengguna di Supabase. Disamakan dengan auth.users lewat public.profiles.
+const USER_PROFILE_TABLE = 'profiles';
 
 function _saveUsersLocal() {
   try { localStorage.setItem(USERS_KEY, JSON.stringify(usersData)); } catch(e) {}
 }
 
 async function loadUsersFromSupabase() {
-  if(!window.db || !db.select) return false;
-  try {
-    var res = await db.select('users');
-    if(res.error || !res.data || !res.data.length) return false;
-    usersData = res.data.map(function(r) {
-      return {
-        id: r.id, nama: r.nama, username: r.username,
-        role: r.role, status: r.status || 'Aktif',
-        lastLogin: r.last_login || '-', password: ''
-      };
-    });
-    _saveUsersLocal();
-    return true;
-  } catch(e) { console.warn('[Users] Load gagal:', e); return false; }
+  if(!window.db || typeof db.select !== 'function') {
+    console.warn('[Users] Supabase belum siap.');
+    return false;
+  }
+  const { data, error } = await db.select(USER_PROFILE_TABLE);
+  if(error) {
+    console.error('[Users] Gagal load:', error.message);
+    return false;
+  }
+  if(!data || !data.length) return false;
+
+  // FIX USERNAME ADMIN: jangan biarkan data Supabase yang lama menimpa
+  // perubahan lokal yang baru disimpan, terutama bila update DB gagal karena
+  // kolom opsional access_pages/write_pages belum dibuat.
+  let localUsers = [];
+  try { localUsers = JSON.parse(localStorage.getItem(USERS_KEY) || '[]') || []; } catch(e) { localUsers = []; }
+  function findLocal(r) {
+    return localUsers.find(function(u) {
+      return (u.id && r.id && String(u.id) === String(r.id)) ||
+             (u.username && r.username && String(u.username).toLowerCase() === String(r.username).toLowerCase());
+    }) || null;
+  }
+
+  usersData = data.map(function(r) {
+    const local = findLocal(r) || {};
+    return {
+      id: r.id || local.id,
+      // Data utama mengikuti Supabase profiles; localStorage hanya cadangan password/lastLogin.
+      nama: r.nama || local.nama,
+      username: r.username || local.username,
+      role: r.role || local.role,
+      status: r.status || local.status || 'Aktif',
+      lastLogin: r.last_login || local.lastLogin || '-',
+      password: local.password || '',
+      accessPages: Array.isArray(r.access_pages) ? r.access_pages : (Array.isArray(local.accessPages) ? local.accessPages : (Array.isArray(r.accessPages) ? r.accessPages : undefined)),
+      writePages: Array.isArray(r.write_pages) ? r.write_pages : (Array.isArray(local.writePages) ? local.writePages : (Array.isArray(r.writePages) ? r.writePages : undefined))
+    };
+  });
+
+  // Pertahankan akun lokal yang belum ada di Supabase, tetapi jangan gandakan admin lama.
+  const hasProfileAdmin = usersData.some(function(u){ return String(u.role || '').toLowerCase() === 'admin'; });
+  localUsers.forEach(function(local) {
+    const localUsername = String(local && local.username || '').toLowerCase();
+    if(hasProfileAdmin && localUsername === 'admin.dahlan') return;
+    if(local && local.username && !usersData.some(function(u) { return String(u.username).toLowerCase() === localUsername || (u.id && local.id && String(u.id) === String(local.id)); })) {
+      usersData.push(local);
+    }
+  });
+
+  _saveUsersLocal();
+  return true;
 }
 var keuanganData = [];
 var suratData = [];
@@ -14817,7 +14835,7 @@ function showLogin() {
     modal.style.cssText = 'display:none;position:fixed;inset:0;background:linear-gradient(135deg,rgba(6,23,15,.94),rgba(8,34,24,.96));z-index:999999;align-items:center;justify-content:center;padding:18px;';
     modal.innerHTML = '<div style="width:420px;max-width:95vw;background:#fff;border-radius:22px;box-shadow:0 28px 90px rgba(0,0,0,.30);padding:28px;font-family:Inter,sans-serif;">'
       + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;"><div style="width:44px;height:44px;border-radius:15px;background:#ECFDF5;color:#047857;display:flex;align-items:center;justify-content:center;"><i class="ti ti-shield-lock" style="font-size:24px;"></i></div><div><h2 style="font-size:18px;font-weight:800;margin:0;color:#111827;">Login SIAKAD</h2><p style="font-size:12px;color:#71717A;margin:2px 0 0;">Session & hak akses aktif per role</p></div></div>'
-      + '<div style="display:grid;gap:12px;"><label style="font-size:12px;font-weight:700;color:#374151;">Username<input id="login-username" value="admin.dahlan" style="margin-top:5px;width:100%;padding:10px 12px;border:1px solid #D4D4D8;border-radius:10px;font-size:13px;"></label>'
+      + '<div style="display:grid;gap:12px;"><label style="font-size:12px;font-weight:700;color:#374151;">Username<input id="login-username" value="admin" style="margin-top:5px;width:100%;padding:10px 12px;border:1px solid #D4D4D8;border-radius:10px;font-size:13px;"></label>'
       + '<label style="font-size:12px;font-weight:700;color:#374151;">Password<input id="login-password" type="password" value="admin123" style="margin-top:5px;width:100%;padding:10px 12px;border:1px solid #D4D4D8;border-radius:10px;font-size:13px;"></label>'
       + '<button class="btn btn-primary" onclick="loginSIAKAD()" style="width:100%;justify-content:center;margin-top:4px;">Masuk</button>'
       + '<div style="background:#F4F4F5;border-radius:12px;padding:12px;font-size:12px;color:#52525B;line-height:1.7;"><i class="ti ti-info-circle" style="margin-right:4px;"></i>Gunakan username dan password yang diberikan oleh administrator sekolah.</div>'
@@ -14840,29 +14858,41 @@ async function loginSIAKAD() {
 
   // ── Coba login via Supabase Auth ──────────────────────────
   if(window.db && db.auth && db.auth.signIn) {
-    // Username → email: tambah @sekolah.id kalau belum ada @
-    const email = username.includes('@') ? username : username + '@sekolah.id';
-    try {
-      const { data, error } = await db.auth.signIn(email, password);
-      if(!error && data && data.user) {
-        // Ambil profil dari tabel users
-        const res = await db.select('users', { eq: { id: data.user.id } });
-        const profil = (res.data && res.data[0]) || null;
-        const user = profil
-          ? { username: profil.username, nama: profil.nama, role: profil.role, status: profil.status || 'Aktif' }
-          : { username: username, nama: data.user.email, role: 'Admin', status: 'Aktif' };
-        if(user.status === 'Nonaktif') {
-          if(err) { err.style.display='block'; err.textContent='Akun Anda dinonaktifkan.'; }
-          if(btn) { btn.disabled=false; btn.textContent='Masuk'; }
+    // Username → email. Mendukung akun lama @sekolah.id dan akun admin @siakad.local.
+    const emailCandidates = username.includes('@')
+      ? [username]
+      : Array.from(new Set([username + '@sekolah.id', username + '@siakad.local']));
+    for(const email of emailCandidates) {
+      try {
+        const { data, error } = await db.auth.signIn(email, password);
+        if(!error && data && data.user) {
+          // Ambil profil dari tabel profiles
+          const res = await db.select(USER_PROFILE_TABLE, { eq: { id: data.user.id } });
+          const profil = (res.data && res.data[0]) || null;
+          const user = profil
+            ? {
+                id: profil.id || data.user.id,
+                username: profil.username || username,
+                nama: profil.nama || data.user.email,
+                role: profil.role || 'Admin',
+                status: profil.status || 'Aktif',
+                accessPages: Array.isArray(profil.access_pages) ? profil.access_pages : undefined,
+                writePages: Array.isArray(profil.write_pages) ? profil.write_pages : undefined
+              }
+            : { id: data.user.id, username: username, nama: data.user.email, role: 'Admin', status: 'Aktif' };
+          if(user.status === 'Nonaktif') {
+            if(err) { err.style.display='block'; err.textContent='Akun Anda dinonaktifkan.'; }
+            if(btn) { btn.disabled=false; btn.textContent='Masuk'; }
+            return;
+          }
+          _finishLogin(user);
           return;
         }
-        _finishLogin(user);
-        return;
+        // Supabase login gagal dengan email ini — coba kandidat berikutnya atau fallback lokal
+        console.warn('[Login] Supabase auth gagal untuk ' + email + ':', error?.message);
+      } catch(e) {
+        console.warn('[Login] Supabase error untuk ' + email + ':', e);
       }
-      // Supabase login gagal — coba fallback lokal
-      console.warn('[Login] Supabase auth gagal:', error?.message);
-    } catch(e) {
-      console.warn('[Login] Supabase error:', e);
     }
   }
 
@@ -14880,6 +14910,32 @@ async function loginSIAKAD() {
   _finishLogin(user);
 }
 
+function _findDashboardNavForLogin() {
+  const items = Array.from(document.querySelectorAll('.nav-item, .subnav-item'));
+  return items.find(el => String(el.getAttribute('onclick') || '').includes("showPage('dashboard'"))
+      || items.find(el => String(el.getAttribute('onclick') || '').includes('showPage("dashboard"'))
+      || null;
+}
+function _forceDashboardAfterLogin() {
+  const dashboardNav = _findDashboardNavForLogin();
+  try {
+    document.querySelectorAll('.nav-item.active, .subnav-item.active').forEach(el => el.classList.remove('active'));
+    if(dashboardNav) dashboardNav.classList.add('active');
+    activeNavItem = dashboardNav || null;
+  } catch(e) {}
+  if(typeof showPage === 'function') {
+    showPage('dashboard', dashboardNav);
+  } else {
+    document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+    const dashboardPage = document.getElementById('page-dashboard');
+    if(dashboardPage) dashboardPage.classList.add('active');
+    const title = document.getElementById('page-title');
+    if(title) title.textContent = 'Dashboard';
+  }
+  if(typeof renderDataModule === 'function') renderDataModule('dashboard');
+  if(typeof updateDashboardStats === 'function') setTimeout(updateDashboardStats, 0);
+  if(typeof applyAccessUI === 'function') setTimeout(applyAccessUI, 0);
+}
 function _finishLogin(user) {
   const btn = document.querySelector('#modal-login-real .btn-primary');
   if(btn) { btn.disabled=false; btn.textContent='Masuk'; }
@@ -14889,13 +14945,19 @@ function _finishLogin(user) {
   if(modal) modal.style.display = 'none';
   tambahAuditLog('LOGIN', 'Login berhasil sebagai '+user.role);
   renderUsers();
-  renderDataModule('dashboard');
+  // FIX LOGIN DASHBOARD: setelah login sukses selalu pindah ke Dashboard.
+  // Sebelumnya hanya renderDataModule('dashboard'), sehingga halaman aktif lama
+  // seperti Data Siswa tetap terlihat setelah logout-login.
+  _forceDashboardAfterLogin();
   _toast('Selamat datang, '+user.nama, 'green');
 }
 
 async function logoutSIAKAD() {
   const old = getCurrentUser();
   if(old) tambahAuditLog('LOGOUT', 'Logout '+old.username);
+  // Saat logout, kembalikan tampilan belakang modal ke Dashboard selagi session masih aktif.
+  // Ini mencegah halaman terakhir tetap menempel sebelum login berikutnya.
+  try { if(typeof _forceDashboardAfterLogin === 'function') _forceDashboardAfterLogin(); } catch(e) {}
   setCurrentUser(null);
   // Logout dari Supabase Auth juga
   if(window.db && db.auth && db.auth.signOut) {
@@ -14947,17 +15009,37 @@ function applyAccessUI() {
     if(!user) return;
     // Jika sudah ada session Supabase, ambil profil dan set currentUser
     if(typeof getCurrentUser === 'function' && getCurrentUser()) return; // sudah login
-    const res = await db.select('users', { eq: { id: user.id } });
+    const res = await db.select(USER_PROFILE_TABLE, { eq: { id: user.id } });
     const profil = res.data && res.data[0];
     if(profil) {
       if(typeof setCurrentUser === 'function') {
-        setCurrentUser({ username: profil.username, nama: profil.nama, role: profil.role, status: profil.status || 'Aktif' });
+        setCurrentUser({
+          id: profil.id || user.id,
+          username: profil.username,
+          nama: profil.nama,
+          role: profil.role,
+          status: profil.status || 'Aktif',
+          accessPages: Array.isArray(profil.access_pages) ? profil.access_pages : undefined,
+          writePages: Array.isArray(profil.write_pages) ? profil.write_pages : undefined
+        });
       }
     }
   } catch(e) {}
 })();
 
 function seedUsersFromDom() {
+  // FIX: pakai data pengguna yang sudah pernah disimpan di localStorage.
+  // Tanpa ini, data Pengguna & Hak Akses dibangun ulang dari HTML setiap reload.
+  try {
+    const rawUsers = localStorage.getItem(USERS_KEY);
+    const savedUsers = rawUsers ? JSON.parse(rawUsers) : null;
+    if(Array.isArray(savedUsers) && savedUsers.length) {
+      usersData = savedUsers;
+      try { window.usersData = usersData; } catch(e) {}
+      return;
+    }
+  } catch(e) { console.warn('[Users] Gagal membaca localStorage:', e); }
+
   const tbody = document.querySelector('#page-pengguna .data-table tbody');
   if(tbody && !tbody.id) tbody.id = 'tbody-pengguna';
   usersData = Array.from(tbody ? tbody.rows : []).map((r, i) => ({
@@ -14971,7 +15053,7 @@ function seedUsersFromDom() {
   })).filter(u => u.username);
   if(!usersData.length) {
     usersData = [
-      {id:_id('usr'),nama:'Ahmad Dahlan',username:'admin.dahlan',role:'Admin',password:'admin123',lastLogin:'-',status:'Aktif'},
+      {id:_id('usr'),nama:'Ahmad Dahlan',username:'admin',role:'Admin',password:'admin123',lastLogin:'-',status:'Aktif'},
       {id:_id('usr'),nama:'Sri Wahyuni',username:'guru.wahyuni',role:'Guru',password:'guru123',lastLogin:'-',status:'Aktif'},
       {id:_id('usr'),nama:'Dwi Hastuti',username:'tata.usaha',role:'TU',password:'tu123',lastLogin:'-',status:'Aktif'}
     ];
@@ -15328,23 +15410,26 @@ simpanPengguna = async function() {
   if(usersData.some(u=>u.username.toLowerCase() === username)) { alert('Username sudah digunakan.'); return; }
 
   // ── Buat akun di Supabase Auth ──
+  if(!window.db || typeof db.insert !== 'function') {
+    alert('Supabase belum siap.'); return;
+  }
   const email = username + '@sekolah.id';
   let supabaseId = null;
-  if(window.db && db.auth && db.auth.signUp) {
-    try {
-      const { data, error } = await db.auth.signUp(email, password, { nama, username, role });
-      if(error) { _toast('Gagal buat akun: ' + error.message, 'red'); return; }
-      supabaseId = data?.user?.id || null;
-    } catch(e) { _toast('Gagal buat akun: ' + (e.message||e), 'red'); return; }
+  if(db.auth && db.auth.signUp) {
+    const { data: authData, error: authErr } = await db.auth.signUp(email, password, { nama, username, role });
+    if(authErr) { _toast('Gagal buat akun: ' + authErr.message, 'red'); return; }
+    supabaseId = authData?.user?.id || null;
   }
 
-  // ── Simpan profil ke tabel users ──
-  const newUser = { id: supabaseId || _id('usr'), nama, username, role, status:'Aktif', lastLogin:'Belum pernah', password };
-  if(supabaseId && window.db && db.insert) {
-    try {
-      await db.insert('users', { id: supabaseId, nama, username, role, status:'Aktif' });
-    } catch(e) { console.warn('[Users] Gagal insert profil:', e); }
+  // ── Simpan profil ke tabel profiles ──
+  const payload = { nama, username, role, status:'Aktif' };
+  if(supabaseId) payload.id = supabaseId;
+  const { data: saved, error: insertErr } = await db.insert(USER_PROFILE_TABLE, payload);
+  if(insertErr) {
+    alert('Gagal simpan profil pengguna: ' + insertErr.message);
+    return;
   }
+  const newUser = { id: (saved && saved.id) || supabaseId || _id('usr'), nama, username, role, status:'Aktif', lastLogin:'Belum pernah', password };
   usersData.push(newUser);
   _saveUsersLocal();
   renderUsers();
@@ -15366,8 +15451,9 @@ async function editPenggunaById(id) {
   u.nama = _strip(newNama);
   u.role = newRole.trim();
   // Simpan ke Supabase
-  if(u.id && window.db && db.update && !String(u.id).startsWith('usr-')) {
-    try { await db.update('users', u.id, { nama: u.nama, role: u.role }); } catch(e) {}
+  if(u.id && window.db && typeof db.update === 'function' && !String(u.id).startsWith('usr-')) {
+    const { error } = await db.update(USER_PROFILE_TABLE, u.id, { nama: u.nama, role: u.role });
+    if(error) { alert('Gagal update pengguna: ' + error.message); return; }
   }
   _saveUsersLocal();
   renderUsers();
@@ -15379,9 +15465,10 @@ async function hapusPenggunaById(id) {
   const u = usersData.find(x=>x.id===id);
   if(u && getCurrentUser()?.username === u.username) { alert('Akun yang sedang login tidak boleh dihapus.'); return; }
   showHapusUniversalConfirm({title:'Hapus pengguna?', name:u?.username || 'Pengguna ini', desc:'Pengguna akan dihapus dari daftar login.', fallback:'Hapus pengguna?'}, async function(){
-    // Hapus dari tabel users di Supabase
-    if(u && u.id && window.db && db.delete && !String(u.id).startsWith('usr-')) {
-      try { await db.delete('users', u.id); } catch(e) {}
+    // Hapus dari tabel profiles di Supabase
+    if(u && u.id && window.db && typeof db.delete === 'function' && !String(u.id).startsWith('usr-')) {
+      const { error } = await db.delete(USER_PROFILE_TABLE, u.id);
+      if(error) { alert('Gagal hapus pengguna: ' + error.message); return; }
     }
     usersData = usersData.filter(x=>x.id!==id);
     _saveUsersLocal();
@@ -15704,6 +15791,7 @@ window.addEventListener('DOMContentLoaded', function(){
 <script>
 /* ════════════════════════════════════════════════════════════
    PATCH V10 — Modal edit Pengguna & Hak Akses + konfirmasi logout kustom.
+   FIX ADMIN — Hak akses akun Admin juga bisa diedit dan tersimpan.
    Tidak memakai prompt()/confirm() browser untuk edit pengguna dan logout.
 ════════════════════════════════════════════════════════════ */
 (function(){
@@ -15785,14 +15873,17 @@ window.addEventListener('DOMContentLoaded', function(){
     if(!user.id) user.id = makeId('usr');
     if(!user.status) user.status = 'Aktif';
     if(!user.password) {
-      if(String(user.username).toLowerCase() === 'admin.dahlan') user.password = 'admin123';
+      if(['admin','admin.dahlan'].includes(String(user.username).toLowerCase())) user.password = 'admin123';
       else if(String(user.username).toLowerCase() === 'guru.wahyuni') user.password = 'guru123';
       else if(String(user.username).toLowerCase() === 'tata.usaha') user.password = 'tu123';
       else user.password = 'user123';
     }
+    // Admin default-nya tetap full akses, tetapi TIDAK dipaksa lagi setiap reload.
+    // Supaya hak akses khusus untuk akun Admin juga bisa disimpan.
     if(!Array.isArray(user.accessPages)) user.accessPages = user.role === 'Admin' ? ['*'] : roleDefault(user.role, 'read');
     if(!Array.isArray(user.writePages)) user.writePages = user.role === 'Admin' ? ['*'] : roleDefault(user.role, 'write');
-    if(user.role === 'Admin') { user.accessPages = ['*']; user.writePages = ['*']; }
+    if(user.role === 'Admin' && !user.accessPages.length) user.accessPages = ['*'];
+    if(user.role === 'Admin' && !user.writePages.length) user.writePages = ['*'];
     return user;
   }
   function normalizeAllUsers() {
@@ -15806,6 +15897,48 @@ window.addEventListener('DOMContentLoaded', function(){
     window.usersData = [];
     return window.usersData;
   }
+
+  async function persistPenggunaLocalAndSupabase(user) {
+    // Simpan permanen di browser dulu. Ini yang membuat username dan hak akses
+    // tidak hilang saat reload meskipun Supabase belum siap.
+    if(typeof _saveUsersLocal === 'function') _saveUsersLocal();
+    try { window.usersData = usersData; } catch(e) {}
+
+    if(!user || !window.db || typeof db.update !== 'function') return;
+    if(!user.id || String(user.id).startsWith('usr-')) return;
+
+    // FIX USERNAME ADMIN: update data utama dipisah dari kolom hak akses.
+    // Jika access_pages/write_pages belum ada di tabel profiles, nama/username/role/status
+    // tetap berhasil tersimpan di Supabase.
+    try {
+      const basicPayload = {
+        nama: user.nama,
+        username: user.username,
+        role: user.role,
+        status: user.status || 'Aktif'
+      };
+      const basicRes = await db.update(USER_PROFILE_TABLE, user.id, basicPayload);
+      if(basicRes && basicRes.error) {
+        console.warn('[Users] Supabase basic update gagal:', basicRes.error.message);
+      }
+    } catch(e) {
+      console.warn('[Users] Supabase basic update exception:', e);
+    }
+
+    try {
+      const accessPayload = {
+        access_pages: Array.isArray(user.accessPages) ? user.accessPages : [],
+        write_pages: Array.isArray(user.writePages) ? user.writePages : []
+      };
+      const accessRes = await db.update(USER_PROFILE_TABLE, user.id, accessPayload);
+      if(accessRes && accessRes.error) {
+        console.warn('[Users] Supabase access update opsional gagal:', accessRes.error.message);
+      }
+    } catch(e) {
+      console.warn('[Users] Supabase access update opsional exception:', e);
+    }
+  }
+
   function recordByUsername(username) {
     return getUsers().find(u => String(u.username).toLowerCase() === String(username || '').toLowerCase()) || null;
   }
@@ -15924,7 +16057,7 @@ window.addEventListener('DOMContentLoaded', function(){
       + '<label style="font-size:12px;font-weight:750;color:#374151;">Role<select id="pg-access-role" style="margin-top:6px;width:100%;padding:10px 12px;border:1px solid #D4D4D8;border-radius:10px;font-size:13px;background:#fff;"><option>Admin</option><option>Guru</option><option>TU</option><option>Operator</option></select></label>'
       + '<label style="font-size:12px;font-weight:750;color:#374151;">Status<select id="pg-access-status" style="margin-top:6px;width:100%;padding:10px 12px;border:1px solid #D4D4D8;border-radius:10px;font-size:13px;background:#fff;"><option>Aktif</option><option>Nonaktif</option></select></label>'
       + '<label style="font-size:12px;font-weight:750;color:#374151;grid-column:1/3;">Password <span id="pg-pass-help" style="font-weight:500;color:#71717A;">kosongkan jika tidak diganti</span><input id="pg-access-password" type="password" autocomplete="new-password" style="margin-top:6px;width:100%;padding:10px 12px;border:1px solid #D4D4D8;border-radius:10px;font-size:13px;"></label>'
-      + '<div style="grid-column:3/5;background:#F8FAFC;border:1px solid #E4E4E7;border-radius:14px;padding:11px 13px;font-size:12px;color:#52525B;line-height:1.55;"><b style="color:#111827;">Catatan:</b> Role memberi default hak akses. Centang manual di bawah akan disimpan khusus untuk pengguna ini. Admin otomatis punya semua akses.</div>'
+      + '<div style="grid-column:3/5;background:#F8FAFC;border:1px solid #E4E4E7;border-radius:14px;padding:11px 13px;font-size:12px;color:#52525B;line-height:1.55;"><b style="color:#111827;">Catatan:</b> Role memberi default hak akses. Centang manual di bawah akan disimpan khusus untuk pengguna ini. Admin default-nya semua akses, tetapi tetap bisa disesuaikan.</div>'
       + '</div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">'
       + '<button type="button" class="btn btn-secondary" onclick="setPenggunaAccessFromRole()"><i class="ti ti-refresh"></i> Pakai Default Role</button>'
@@ -15957,11 +16090,12 @@ window.addEventListener('DOMContentLoaded', function(){
 
   function applyPermissionChecks(readList, writeList, role) {
     const modal = ensureUserAccessModal();
-    const isAdmin = role === 'Admin';
-    const readAll = isAdmin || (Array.isArray(readList) && readList.includes('*'));
-    const writeAll = isAdmin || (Array.isArray(writeList) && writeList.includes('*'));
-    modal.querySelectorAll('.pg-access-view').forEach(cb => { cb.checked = readAll || (Array.isArray(readList) && readList.includes(cb.dataset.page)); cb.disabled = isAdmin; });
-    modal.querySelectorAll('.pg-access-write').forEach(cb => { cb.checked = writeAll || (Array.isArray(writeList) && writeList.includes(cb.dataset.page)); cb.disabled = isAdmin; });
+    // Admin boleh diedit manual. Default role Admin tetap semua akses,
+    // tetapi checkbox tidak lagi dikunci supaya perubahan bisa disimpan.
+    const readAll = Array.isArray(readList) && readList.includes('*');
+    const writeAll = Array.isArray(writeList) && writeList.includes('*');
+    modal.querySelectorAll('.pg-access-view').forEach(cb => { cb.checked = readAll || (Array.isArray(readList) && readList.includes(cb.dataset.page)); cb.disabled = false; });
+    modal.querySelectorAll('.pg-access-write').forEach(cb => { cb.checked = writeAll || (Array.isArray(writeList) && writeList.includes(cb.dataset.page)); cb.disabled = false; });
   }
   window.setPenggunaAccessFromRole = function() {
     const modal = ensureUserAccessModal();
@@ -15970,8 +16104,6 @@ window.addEventListener('DOMContentLoaded', function(){
   };
   window.toggleAllPenggunaAccess = function(type, checked) {
     const modal = ensureUserAccessModal();
-    const role = modal.querySelector('#pg-access-role').value;
-    if(role === 'Admin') return;
     const selector = type === 'write' ? '.pg-access-write' : '.pg-access-view';
     modal.querySelectorAll(selector).forEach(cb => { cb.checked = !!checked; cb.dispatchEvent(new Event('change')); });
   };
@@ -15998,7 +16130,7 @@ window.addEventListener('DOMContentLoaded', function(){
     modal.setAttribute('aria-hidden','false');
     setTimeout(()=>document.getElementById('pg-access-nama')?.focus(), 50);
   };
-  window.savePenggunaAccessModal = function() {
+  window.savePenggunaAccessModal = async function() {
     const modal = ensureUserAccessModal();
     const mode = document.getElementById('pg-access-mode').value;
     const id = document.getElementById('pg-access-id').value;
@@ -16015,21 +16147,34 @@ window.addEventListener('DOMContentLoaded', function(){
     if(duplicate) { toast('Username sudah digunakan.', 'red'); return; }
     const current = window.getCurrentUser();
     if(current && current.username === username && status === 'Nonaktif') { toast('Akun yang sedang login tidak boleh dinonaktifkan.', 'red'); return; }
-    let readList, writeList;
-    if(role === 'Admin') {
-      readList = ['*']; writeList = ['*'];
-    } else {
-      readList = Array.from(modal.querySelectorAll('.pg-access-view:checked')).map(cb => cb.dataset.page);
-      writeList = Array.from(modal.querySelectorAll('.pg-access-write:checked')).map(cb => cb.dataset.page);
-      writeList.forEach(p => { if(!readList.includes(p)) readList.push(p); });
-      if(!readList.includes('dashboard')) readList.unshift('dashboard');
-      if(readList.length < 1) { toast('Minimal satu hak akses lihat harus dipilih.', 'red'); return; }
+    let readList = Array.from(modal.querySelectorAll('.pg-access-view:checked')).map(cb => cb.dataset.page);
+    let writeList = Array.from(modal.querySelectorAll('.pg-access-write:checked')).map(cb => cb.dataset.page);
+    writeList.forEach(p => { if(!readList.includes(p)) readList.push(p); });
+    if(!readList.includes('dashboard')) readList.unshift('dashboard');
+
+    // Pengaman awal: jika username tidak diganti. Pengaman tambahan setelah
+    // user ditemukan ada di bawah, karena saat username diganti current.username
+    // masih berisi username lama.
+    if(current && current.username === username) {
+      if(!readList.includes('pengguna')) readList.push('pengguna');
+      if(!writeList.includes('pengguna')) writeList.push('pengguna');
     }
+
+    if(readList.length < 1) { toast('Minimal satu hak akses lihat harus dipilih.', 'red'); return; }
+
+    // Jika semua dicentang, simpan ringkas sebagai ['*']; kalau ada yang dikurangi, simpan daftar khusus.
+    if(readList.length >= PAGE_IDS.length && PAGE_IDS.every(p => readList.includes(p))) readList = ['*'];
+    if(writeList.length >= PAGE_IDS.length && PAGE_IDS.every(p => writeList.includes(p))) writeList = ['*'];
     let user;
     if(mode === 'edit') {
       user = getUsers().find(u => u.id === id);
       if(!user) { toast('Data pengguna tidak ditemukan.', 'red'); return; }
       const oldUsername = user.username;
+      if(current && current.username === oldUsername) {
+        if(status === 'Nonaktif') { toast('Akun yang sedang login tidak boleh dinonaktifkan.', 'red'); return; }
+        if(!readList.includes('pengguna')) readList.push('pengguna');
+        if(!writeList.includes('pengguna')) writeList.push('pengguna');
+      }
       user.nama = nama; user.username = username; user.role = role; user.status = status; user.accessPages = readList; user.writePages = writeList;
       if(password) user.password = password;
       normalizeUserPermissions(user);
@@ -16043,6 +16188,8 @@ window.addEventListener('DOMContentLoaded', function(){
       toast('Pengguna baru dan hak akses berhasil disimpan.', 'green');
       if(typeof tambahAuditLog === 'function') tambahAuditLog('CREATE', 'Tambah pengguna & hak akses '+username);
     }
+    // FIX: simpan hasil edit/tambah hak akses agar tidak hilang setelah reload.
+    await persistPenggunaLocalAndSupabase(user);
     window.renderUsers();
     if(typeof applyAccessUI === 'function') applyAccessUI();
     window.closePenggunaAccessModal();
@@ -16067,6 +16214,13 @@ window.addEventListener('DOMContentLoaded', function(){
       const arr = getUsers();
       const idx = arr.findIndex(u => u.id === id);
       if(idx >= 0) arr.splice(idx,1);
+      // FIX: simpan hasil hapus pengguna ke localStorage.
+      if(typeof _saveUsersLocal === 'function') _saveUsersLocal();
+      try { window.usersData = usersData; } catch(e) {}
+      // Opsional: hapus juga dari Supabase bila id adalah id database asli.
+      if(user.id && !String(user.id).startsWith('usr-') && window.db && typeof db.delete === 'function') {
+        db.delete(USER_PROFILE_TABLE, user.id).then(function(res){ if(res && res.error) console.warn('[Users] Supabase delete gagal:', res.error.message); });
+      }
       window.renderUsers();
       toast('Pengguna berhasil dihapus.', 'red');
       if(typeof tambahAuditLog === 'function') tambahAuditLog('DELETE', 'Hapus pengguna '+user.username);
@@ -16108,11 +16262,17 @@ window.addEventListener('DOMContentLoaded', function(){
     const modal = document.getElementById('modal-logout-custom');
     if(modal) { modal.style.display = 'none'; modal.setAttribute('aria-hidden','true'); }
   };
-  window.confirmLogoutSIAKAD = function() {
+  window.confirmLogoutSIAKAD = async function() {
     window.closeLogoutConfirm();
     const old = window.getCurrentUser();
     if(old && typeof tambahAuditLog === 'function') tambahAuditLog('LOGOUT', 'Logout '+old.username);
+    // FIX LOGIN DASHBOARD: sebelum session ditutup, pindahkan halaman aktif ke Dashboard.
+    // Jadi setelah logout lalu login kembali, tidak tetap berada di halaman terakhir.
+    try { if(typeof _forceDashboardAfterLogin === 'function') _forceDashboardAfterLogin(); } catch(e) {}
     window.setCurrentUser(null);
+    if(window.db && db.auth && db.auth.signOut) {
+      try { await db.auth.signOut(); } catch(e) {}
+    }
     if(typeof showLogin === 'function') showLogin();
   };
   window.logoutSIAKAD = function() { window.showLogoutConfirm(); };
@@ -19499,11 +19659,18 @@ function exportDetailAbsensiGuruPDF() {
       try {
         const res = await db.select('guru', { order:'nama' });
         if(!res.error) {
-          guruRows = (res.data || []).map(normalizeDb);
-          if(!guruRows.length) guruRows = [];
-          renderGuruRows();
-          syncGuruList();
-          if(forceToast && typeof showToast === 'function') showToast('Data guru dimuat ulang dari Supabase.', 'green');
+          if(res.data && res.data.length > 0) {
+            guruRows = res.data.map(normalizeDb);
+            renderGuruRows();
+            syncGuruList();
+            if(forceToast && typeof showToast === 'function') showToast('Data guru dimuat ulang dari Supabase.', 'green');
+          } else {
+            // Supabase kosong, fallback ke data lokal/cache
+            console.warn('[Guru V15] Tabel guru di Supabase kosong — memakai data lokal/cache.');
+            guruRows = loadLocalCache();
+            renderGuruRows();
+            syncGuruList();
+          }
           return;
         }
         console.warn('[Guru V15] Gagal load Supabase, pakai cache/lokal:', res.error.message);
@@ -20463,6 +20630,31 @@ function exportDetailAbsensiGuruPDF() {
 })();
 
 </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"7939e04a4baf43c8b86a560f74aac60e","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+
+
+<script id="fix-admin-username-v11">
+/* FIX ADMIN USERNAME V11 — sinkronkan default login dengan username admin tersimpan. */
+(function(){
+  function getSavedAdminUsername(){
+    try {
+      const list = JSON.parse(localStorage.getItem('sdplus_users_v1') || '[]') || [];
+      const admin = list.find(u => String(u.role || '').toLowerCase() === 'admin') || list[0];
+      return admin && admin.username ? String(admin.username).toLowerCase() : '';
+    } catch(e) { return ''; }
+  }
+  const oldShowLogin = window.showLogin;
+  if(typeof oldShowLogin === 'function') {
+    window.showLogin = function(){
+      oldShowLogin();
+      const input = document.getElementById('login-username');
+      const saved = getSavedAdminUsername();
+      if(input && saved && (!input.value || input.value === 'admin.dahlan')) input.value = saved;
+    };
+  }
+})();
+</script>
+
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"7939e04a4baf43c8b86a560f74aac60e","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
