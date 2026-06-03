@@ -18594,7 +18594,13 @@ function obj(name){try{var v=window[name];return(v&&typeof v==='object'&&!Array.
 function fmt(n){return new Intl.NumberFormat('id-ID').format(Number(n)||0);}
 function rp(n){return'Rp\u00A0'+new Intl.NumberFormat('id-ID').format(Math.round(Number(n)||0));}
 function today(){return new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});}
-function sekolah(){try{var s=document.querySelector('#set-nama-sekolah,input[name="namaSekolah"]');return(s&&s.value)||'SD PLUS';}catch(e){return'SD PLUS';}}
+function sekolah(){
+  try{
+    var s=document.querySelector('#set-nama-sekolah,input[name="namaSekolah"]');
+    var v=(s&&s.value)||((window.pengaturanSekolah&&window.pengaturanSekolah.namaSekolah)||'');
+    return v||'Belum diatur';
+  }catch(e){return'Belum diatur';}
+}
 function userNow(){try{if(typeof getCurrentUser==='function'){var u=getCurrentUser();return(u&&(u.nama||u.username))||'Admin';}return'Admin';}catch(e){return'Admin';}}
 function kelasList(){var set={};arr('siswaList').forEach(function(s){if(s.kelas)set[s.kelas]=1;});return Object.keys(set).sort(function(a,b){return a.localeCompare(b,'id',{numeric:true});});}
 function badge(t,c){return'<span class="lb lb-'+esc(c||'gray')+'">'+esc(t)+'</span>';}
@@ -21591,6 +21597,12 @@ function exportDetailAbsensiGuruPDF() {
         }
         saved = normalizeDb(res.data || payload);
         saved.id = (res.data && res.data.id) || existing?.id || saved.id;
+        saved.kelasDiajar = data.kelasDiajar || '';
+        saved.waliKelas = data.waliKelas || '';
+        saved.rombel = data.rombel || '';
+        saved.jam = data.jam || '';
+        saved.tahunAjaran = data.tahunAjaran || '';
+        saved.semester = data.semester || '';
       } catch(e) {
         alert('Gagal simpan guru ke Supabase: ' + (e.message || e));
         return;
@@ -29892,11 +29904,12 @@ console.log('[V13] - Audit Log & Backup -> Supabase. Data lama HTML dihapus dari
     };
 
     window.saveNilaiToSupabase = async function(kelas){
-      if(!window.db || (!db.upsert && !db.insert)) return;
-      if(!window.siswaList) return;
+      if(!window.db || (!db.upsert && !db.insert)) return {ok:false, saved:0, failed:0, reason:'Supabase belum siap'};
+      if(!window.siswaList) return {ok:false, saved:0, failed:0, reason:'Data siswa belum siap'};
       var mapel = (document.getElementById('nilai-mapel') || {}).value || '';
       var semester = (document.getElementById('nilai-semester') || {}).value || '';
       var siswaKelas = siswaByKelasNorm(kelas);
+      var saved = 0, failed = 0;
       try {
         for(var i=0;i<siswaKelas.length;i++) {
           var s = siswaKelas[i];
@@ -29907,17 +29920,20 @@ console.log('[V13] - Audit Log & Backup -> Supabase. Data lama HTML dihapus dari
             siswa_id: k, kelas: s.kelas || kelas, mapel: mapel, semester: semester,
             nilai_tugas: n.t || 0, nilai_ujian: n.l || 0, catatan: n.catatan || ''
           };
-          if(n._id && db.update) await db.update('nilai_siswa', n._id, payload);
+          var res = null;
+          if(n._id && db.update) res = await db.update('nilai_siswa', n._id, payload);
           else if(db.upsert) {
-            var res = await db.upsert('nilai_siswa', payload, 'siswa_id,mapel,semester');
+            res = await db.upsert('nilai_siswa', payload, 'siswa_id,mapel,semester');
             if(res && res.data && res.data[0] && res.data[0].id) nilaiStore[k]._id = res.data[0].id;
             else if(res && res.data && res.data.id) nilaiStore[k]._id = res.data.id;
-          } else await db.insert('nilai_siswa', payload);
+          } else res = await db.insert('nilai_siswa', payload);
+          if(res && res.error) failed++; else saved++;
         }
-      } catch(e){ console.warn('[IntegrasiNilai] Gagal simpan nilai:', String(e)); }
+        return {ok:failed === 0, saved:saved, failed:failed};
+      } catch(e){ console.warn('[IntegrasiNilai] Gagal simpan nilai:', String(e)); return {ok:false, saved:saved, failed:failed + 1, reason:String(e && e.message || e)}; }
     };
 
-    window.simpanNilai = function(){
+    window.simpanNilai = async function(){
       var kelas = cleanText((document.getElementById('nilai-kelas') || {}).value);
       var siswaKelas = siswaByKelasNorm(kelas);
       var tuntas = 0, remedial = 0;
@@ -29929,12 +29945,14 @@ console.log('[V13] - Audit Log & Backup -> Supabase. Data lama HTML dihapus dari
       });
       try { if(typeof _saveNilaiLocal === 'function') _saveNilaiLocal(); } catch(e){}
       //  PERBAIKAN: Tambah error handling
+      var remote = null;
       if(window.saveNilaiToSupabase) {
-        window.saveNilaiToSupabase(kelas).catch(function(e) {
+        remote = await window.saveNilaiToSupabase(kelas).catch(function(e) {
           console.warn('[Nilai] Gagal simpan ke Supabase:', String(e));
+          return {ok:false, reason:String(e && e.message || e)};
         });
       }
-      toast('Nilai kelas '+kelas+' tersimpan: '+tuntas+' tuntas, '+remedial+' remedial', 'green');
+      toast(remote && remote.ok ? ('Nilai kelas '+kelas+' tersimpan ke Supabase: '+tuntas+' tuntas, '+remedial+' remedial') : ('Nilai tersimpan lokal, tapi Supabase belum menerima semua data.'), remote && remote.ok ? 'green' : 'amber');
     };
 
     window.exportNilai = function(){
@@ -32634,6 +32652,8 @@ console.log('[V13] - Audit Log & Backup -> Supabase. Data lama HTML dihapus dari
     var p = (window.pegawaiList || []).find(function(x){ return String(x.id||x._id||x.nip) === String(idp); }) || {};
     document.getElementById('modal-pegawai-title').textContent = idp ? 'Edit Pegawai' : 'Tambah Pegawai';
     ['id','nama','nip','jabatan','unit','hp','status'].forEach(function(k){ var el=document.getElementById(k==='id'?'peg-edit-id':'peg-'+k); if(el) el.value = p[k] || ''; });
+    var tglPeg = document.getElementById('peg-tgl-lahir');
+    if(tglPeg) tglPeg.value = p.tanggal_lahir || p.tgl_lahir || p.tanggalLahir || '';
     if(!document.getElementById('peg-status').value) document.getElementById('peg-status').value='Aktif';
     m.style.display='flex';
   };
@@ -32645,11 +32665,29 @@ console.log('[V13] - Audit Log & Backup -> Supabase. Data lama HTML dihapus dari
     //  FIX: generate client_key unik per-row pegawai
     var _ckp = window.ACTIVE_CLIENT_KEY || (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('ACTIVE_CLIENT_KEY')) || '';
     var _nipp = (data.nip || '').trim();
-    data.client_key = (_ckp ? _ckp + '_peg_' : 'peg_') + (_nipp || (Date.now().toString(36) + Math.random().toString(36).slice(2,7)));
     var rows = window.pegawaiList || []; var idx = rows.findIndex(function(x){return String(x.id||x._id||x.nip)===String(idp);});
+    var existingPeg = idx >= 0 ? rows[idx] : null;
+    data.client_key = (existingPeg && existingPeg.client_key) || ((_ckp ? _ckp + '_peg_' : 'peg_') + (_nipp || (Date.now().toString(36) + Math.random().toString(36).slice(2,7))));
     if(idx>=0) Object.assign(rows[idx], data); else rows.unshift(Object.assign({id:uid('peg')}, data));
-    savePegawaiLocal(); renderPegawai(); closeModalPegawai(); audit(idx>=0?'EDIT':'CREATE','Data Pegawai'); notify('Data pegawai disimpan.', 'green');
-    try { if(window.db){ if(idx>=0 && rows[idx].id && db.update) await db.update('pegawai', rows[idx].id, data); else if(idx<0 && db.insert){ var r=await db.insert('pegawai', data); if(!r.error && r.data){ rows[0].id = r.data.id || rows[0].id; savePegawaiLocal(); } } } } catch(e){}
+    var dbTried = false, dbOk = false, dbMsg = '';
+    try {
+      if(window.db) {
+        if(idx>=0 && rows[idx].id && db.update) {
+          dbTried = true;
+          var up = await db.update('pegawai', rows[idx].id, data);
+          dbOk = !(up && up.error);
+          if(up && up.error) dbMsg = up.error.message || String(up.error);
+        } else if(idx<0 && db.insert) {
+          dbTried = true;
+          var r=await db.insert('pegawai', data);
+          dbOk = !(r && r.error);
+          if(r && r.error) dbMsg = r.error.message || String(r.error);
+          if(dbOk && r.data){ rows[0].id = r.data.id || rows[0].id; }
+        }
+      }
+    } catch(e){ dbTried = true; dbOk = false; dbMsg = e && e.message ? e.message : String(e); }
+    savePegawaiLocal(); renderPegawai(); closeModalPegawai(); audit(idx>=0?'EDIT':'CREATE','Data Pegawai');
+    notify((dbTried && !dbOk) ? ('Data pegawai tersimpan lokal, tapi Supabase belum menerima: '+dbMsg) : 'Data pegawai disimpan.', (dbTried && !dbOk) ? 'amber' : 'green');
   };
   window.hapusPegawai = async function(idp){
     var rows = window.pegawaiList || []; var idx = rows.findIndex(function(x){return String(x.id||x._id||x.nip)===String(idp);}); if(idx<0) return;
@@ -35773,8 +35811,25 @@ console.log('[V13] - Audit Log & Backup -> Supabase. Data lama HTML dihapus dari
   }
 
   function normalizeRecord(x){ x = x || {}; x.id = x.id || x._id || uid('jurnal'); x.created_at = x.created_at || new Date().toISOString(); return x; }
-  async function insertSupabase(table,payload){ try { if(window.db && db.insert){ var r=await db.insert(table,payload); if(r && !r.error && r.data) return r.data; } } catch(e){} return null; }
-  async function updateSupabase(table,id,payload){ try { if(window.db && db.update && id && !String(id).startsWith('jurnal-')) await db.update(table,id,payload); } catch(e){} }
+  async function insertSupabase(table,payload){
+    try {
+      if(window.db && db.insert){
+        var r=await db.insert(table,payload);
+        if(r && r.error) return {ok:false,error:r.error};
+        if(r && r.data) return {ok:true,data:r.data};
+      }
+    } catch(e){ return {ok:false,error:e}; }
+    return {ok:false,error:{message:'Supabase belum siap'}};
+  }
+  async function updateSupabase(table,id,payload){
+    try {
+      if(window.db && db.update && id && !String(id).startsWith('jurnal-')){
+        var r = await db.update(table,id,payload);
+        return {ok:!(r && r.error), error:r && r.error};
+      }
+    } catch(e){ return {ok:false,error:e}; }
+    return {ok:false,error:{message:'Supabase belum siap atau id lokal'}};
+  }
 
   window.renderJurnalGuru = function(){
     ensurePagesOnce();
@@ -35813,9 +35868,10 @@ console.log('[V13] - Audit Log & Backup -> Supabase. Data lama HTML dihapus dari
       if(!payload.kelas || !payload.mapel || !payload.materi) return toast('Lengkapi kelas, mapel, dan materi jurnal guru.', 'red');
       if(file) Object.assign(payload, await uploadPdf(file,'jurnal-guru'));
       var idx=(window.jurnalGuruData||[]).findIndex(function(x){return String(x.id)===String(id);});
-      if(idx>=0){ window.jurnalGuruData[idx]=Object.assign({}, window.jurnalGuruData[idx], payload); await updateSupabase('jurnal_guru', id, payload); }
-      else { var saved=await insertSupabase('jurnal_guru', payload); if(saved && saved.id) payload.id=saved.id; window.jurnalGuruData.unshift(payload); }
-      saveGuruLocal(); renderJurnalGuru(); closeModalJurnalGuru(); toast('Jurnal guru tersimpan.', 'green');
+      var remote = null;
+      if(idx>=0){ window.jurnalGuruData[idx]=Object.assign({}, window.jurnalGuruData[idx], payload); remote = await updateSupabase('jurnal_guru', id, payload); }
+      else { remote=await insertSupabase('jurnal_guru', payload); var saved=remote && remote.data; if(saved && saved.id) payload.id=saved.id; window.jurnalGuruData.unshift(payload); }
+      saveGuruLocal(); renderJurnalGuru(); closeModalJurnalGuru(); toast(remote && remote.ok ? 'Jurnal guru tersimpan ke Supabase.' : 'Jurnal guru tersimpan lokal, tapi Supabase belum menerima.', remote && remote.ok ? 'green' : 'amber');
       try { if(typeof logAudit === 'function') logAudit('JURNAL_GURU', 'Simpan jurnal guru '+payload.guru_nama+' - '+payload.kelas); } catch(e){}
     } catch(e){ console.warn('[Jurnal Guru]', e); toast(e.message || 'Gagal menyimpan jurnal guru.', 'red'); }
   };
@@ -35828,9 +35884,10 @@ console.log('[V13] - Audit Log & Backup -> Supabase. Data lama HTML dihapus dari
       if(!payload.kelas || !payload.mapel || !payload.materi) return toast('Lengkapi kelas, mapel, dan materi jurnal kelas.', 'red');
       if(file) Object.assign(payload, await uploadPdf(file,'jurnal-kelas')); else Object.assign(payload, {pdf_url:old.pdf_url, pdf_data:old.pdf_data, pdf_name:old.pdf_name, pdf_path:old.pdf_path, pdf_size:old.pdf_size});
       var idx=(window.jurnalKelasData||[]).findIndex(function(x){return String(x.id)===String(id);});
-      if(idx>=0){ window.jurnalKelasData[idx]=Object.assign({}, window.jurnalKelasData[idx], payload); await updateSupabase('jurnal_kelas', id, payload); }
-      else { var saved=await insertSupabase('jurnal_kelas', payload); if(saved && saved.id) payload.id=saved.id; window.jurnalKelasData.unshift(payload); }
-      saveKelasLocal(); renderJurnalKelas(); closeModalJurnalKelas(); toast('Jurnal kelas PDF tersimpan.', 'green');
+      var remote = null;
+      if(idx>=0){ window.jurnalKelasData[idx]=Object.assign({}, window.jurnalKelasData[idx], payload); remote = await updateSupabase('jurnal_kelas', id, payload); }
+      else { remote=await insertSupabase('jurnal_kelas', payload); var saved=remote && remote.data; if(saved && saved.id) payload.id=saved.id; window.jurnalKelasData.unshift(payload); }
+      saveKelasLocal(); renderJurnalKelas(); closeModalJurnalKelas(); toast(remote && remote.ok ? 'Jurnal kelas PDF tersimpan ke Supabase.' : 'Jurnal kelas PDF tersimpan lokal, tapi Supabase belum menerima.', remote && remote.ok ? 'green' : 'amber');
       try { if(typeof logAudit === 'function') logAudit('JURNAL_KELAS', 'Upload jurnal kelas '+payload.kelas+' - '+payload.mapel); } catch(e){}
     } catch(e){ console.warn('[Jurnal Kelas]', e); toast(e.message || 'Gagal menyimpan jurnal kelas.', 'red'); }
   };
@@ -47328,13 +47385,46 @@ div[id^="modal-"]:not(#modal-login-real):not(#modal-login) > div [style*="max-he
     if(ok) toast('Kelas/wali kelas guru tersimpan ke Supabase.', 'green');
     else toast('Kelas/wali kelas guru belum masuk Supabase. Cek kolom kelas_diajar/wali_kelas.', 'amber');
   }
+  function syncLocalGuruKelas(snap){
+    try {
+      var list = (typeof guruRows !== 'undefined' && Array.isArray(guruRows)) ? guruRows : null;
+      if(!list) return;
+      var row = list.find(function(g){
+        return (snap.id && String(g.id || g.local_id || g.nip || '') === String(snap.id))
+          || (snap.nip && String(g.nip || '') === String(snap.nip))
+          || (snap.nama && clean(g.nama).toLowerCase() === clean(snap.nama).toLowerCase());
+      });
+      if(!row) return;
+      row.kelasDiajar = snap.kelasDiajar || '';
+      row.waliKelas = snap.waliKelas || '';
+      row.rombel = snap.rombel || '';
+      row.jam = snap.jam || '';
+      row.tahunAjaran = snap.tahunAjaran || row.tahunAjaran || '';
+      row.semester = snap.semester || row.semester || '';
+      if(row.raw) {
+        row.raw.kelas_diajar = snap.kelasDiajar || null;
+        row.raw.wali_kelas = snap.waliKelas || null;
+        row.raw.rombel = snap.rombel || null;
+      }
+      try { if(typeof saveLocalCache === 'function') saveLocalCache(); } catch(e){}
+      try { if(typeof renderGuruRows === 'function') renderGuruRows(); } catch(e){}
+      try { if(typeof syncGuruList === 'function') syncGuruList(); } catch(e){}
+    } catch(e){
+      try { console.warn('[Guru kelas] Gagal sync lokal:', e); } catch(_){}
+    }
+  }
   function wrap(){
     var old = window.simpanGuru;
     if(typeof old !== 'function' || old.__zGuruKelasOnlySave) return;
     window.simpanGuru = function(){
       var snap = snapGuruKelas();
       var out = old.apply(this, arguments);
-      Promise.resolve(out).then(function(){ return simpanGuruKelasSupabase(snap); }).catch(function(e){
+      Promise.resolve(out).then(function(){
+        syncLocalGuruKelas(snap);
+        return simpanGuruKelasSupabase(snap);
+      }).then(function(){
+        syncLocalGuruKelas(snap);
+      }).catch(function(e){
         try { console.warn('[Guru kelas Supabase] Gagal simpan kelas/wali kelas:', e); } catch(_){}
       });
       return out;
@@ -47347,6 +47437,581 @@ div[id^="modal-"]:not(#modal-login-real):not(#modal-login) > div [style*="max-he
 })();
 </script>
 <!-- PATCH: SIMPAN KELAS/WALI KELAS GURU KE SUPABASE TANPA UBAH TAMPILAN - END -->
+
+<!-- PATCH: VERIFIKASI EDIT PENGGUNA KE SUPABASE - START -->
+<script id="zymata-verifikasi-pengguna-supabase">
+(function(){
+  'use strict';
+  if(window.__ZYMATA_VERIFIKASI_PENGGUNA_SUPABASE__) return;
+  window.__ZYMATA_VERIFIKASI_PENGGUNA_SUPABASE__ = true;
+
+  function clean(v){ return String(v==null?'':v).replace(/\s+/g,' ').trim(); }
+  function toast(msg,tone){ try { if(typeof showToast === 'function') return showToast(msg,tone||'green'); } catch(e){} try { if(typeof _toast === 'function') return _toast(msg,tone||'green'); } catch(e){} }
+  function snap(){
+    return {
+      id: clean((document.getElementById('pg-access-id') || {}).value),
+      mode: clean((document.getElementById('pg-access-mode') || {}).value),
+      nama: clean((document.getElementById('pg-access-nama') || {}).value),
+      username: clean((document.getElementById('pg-access-username') || {}).value).toLowerCase(),
+      role: clean((document.getElementById('pg-access-role') || {}).value),
+      status: clean((document.getElementById('pg-access-status') || {}).value)
+    };
+  }
+  async function verifyProfile(s){
+    if(!s || !window.db || typeof db.select !== 'function' || !s.id || String(s.id).startsWith('usr-')) return;
+    try {
+      var res = await db.select('profiles', { eq:{ id:s.id }, limit:1 });
+      var row = res && res.data && res.data[0];
+      if(!row) {
+        toast('Pengguna tersimpan lokal, tapi belum ditemukan di Supabase profiles.', 'amber');
+        return;
+      }
+      var mismatch = clean(row.nama) !== s.nama || clean(row.username).toLowerCase() !== s.username || clean(row.role) !== s.role || clean(row.status || 'Aktif') !== (s.status || 'Aktif');
+      if(mismatch) toast('Pengguna tersimpan lokal, tapi Supabase profiles belum sama. Cek koneksi/kolom profiles.', 'amber');
+    } catch(e) {
+      toast('Pengguna tersimpan lokal, tapi verifikasi Supabase gagal.', 'amber');
+    }
+  }
+  function wrap(){
+    var old = window.savePenggunaAccessModal;
+    if(typeof old !== 'function' || old.__zVerifyPenggunaSupabase) return;
+    window.savePenggunaAccessModal = async function(){
+      var s = snap();
+      var out = await old.apply(this, arguments);
+      setTimeout(function(){ verifyProfile(s); }, 250);
+      return out;
+    };
+    window.savePenggunaAccessModal.__zVerifyPenggunaSupabase = true;
+    try { savePenggunaAccessModal = window.savePenggunaAccessModal; } catch(e){}
+  }
+  document.addEventListener('DOMContentLoaded', function(){ [400,1200,2600].forEach(function(ms){ setTimeout(wrap,ms); }); });
+  setTimeout(wrap, 1200);
+})();
+</script>
+<!-- PATCH: VERIFIKASI EDIT PENGGUNA KE SUPABASE - END -->
+
+<!-- PATCH: AUDIT ADMINISTRASI FINAL - STATUS SIMPAN JUJUR - START -->
+<script id="zymata-audit-administrasi-final">
+(function(){
+  'use strict';
+  if(window.__ZYMATA_AUDIT_ADMINISTRASI_FINAL__) return;
+  window.__ZYMATA_AUDIT_ADMINISTRASI_FINAL__ = true;
+
+  function clean(v){ return String(v == null ? '' : v).replace(/\s+/g,' ').trim(); }
+  function toast(msg, tone){
+    try { if(typeof showToast === 'function') return showToast(msg, tone || 'green'); } catch(e){}
+    try { if(typeof _toast === 'function') return _toast(msg, tone || 'green'); } catch(e){}
+  }
+  function sameId(a,b){ return String(a == null ? '' : a) === String(b == null ? '' : b); }
+  function tail(arr){ return Array.isArray(arr) && arr.length ? arr[0] : null; }
+  function withQuietToast(fn){
+    var oldToast = window.showToast;
+    var oldLocalToast = window._toast;
+    window.showToast = function(){};
+    try { window._toast = function(){}; } catch(e){}
+    return Promise.resolve()
+      .then(fn)
+      .finally(function(){
+        window.showToast = oldToast;
+        try { window._toast = oldLocalToast; } catch(e){}
+      });
+  }
+  function resultTone(ok, fallbackMsg, okMsg){
+    toast(ok ? okMsg : fallbackMsg, ok ? 'green' : 'amber');
+  }
+
+  async function saveRemote(record, saver){
+    if(!record || typeof saver !== 'function') return {ok:false};
+    try {
+      var res = await saver(record);
+      return {ok:!(res && res.error), res:res};
+    } catch(e){
+      return {ok:false, error:e};
+    }
+  }
+
+  function wrapKeuangan(){
+    var old = window.simpanTransaksi;
+    if(typeof old !== 'function' || old.__zAuditAdminFinal) return;
+    window.simpanTransaksi = async function(){
+      var before = Array.isArray(window.keuanganData) ? window.keuanganData.slice() : [];
+      var editId = clean(window.keuanganEditId || '');
+      await withQuietToast(function(){ return old.apply(this, arguments); }.bind(this));
+      var after = Array.isArray(window.keuanganData) ? window.keuanganData : [];
+      var row = editId
+        ? after.find(function(x){ return sameId(x && x.id, editId); })
+        : (tail(after) && before.indexOf(tail(after)) === -1 ? tail(after) : tail(after));
+      var remote = await saveRemote(row, window.saveKeuanganToSupabase);
+      resultTone(remote.ok, 'Transaksi tersimpan lokal, tapi Supabase belum menerima.', editId ? 'Transaksi berhasil diupdate ke Supabase.' : 'Transaksi berhasil dicatat ke Supabase.');
+      return row;
+    };
+    window.simpanTransaksi.__zAuditAdminFinal = true;
+    try { simpanTransaksi = window.simpanTransaksi; } catch(e){}
+  }
+
+  function wrapInventaris(){
+    var old = window.simpanInventaris;
+    if(typeof old !== 'function' || old.__zAuditAdminFinal) return;
+    window.simpanInventaris = async function(){
+      var editId = clean((document.getElementById('inv-edit-row') || {}).value);
+      var before = Array.isArray(window.inventarisData) ? window.inventarisData.slice() : [];
+      await withQuietToast(function(){ return old.apply(this, arguments); }.bind(this));
+      var after = Array.isArray(window.inventarisData) ? window.inventarisData : [];
+      var row = editId
+        ? after.find(function(x){ return sameId(x && x.id, editId); })
+        : (tail(after) && before.indexOf(tail(after)) === -1 ? tail(after) : tail(after));
+      var remote = await saveRemote(row, window.saveInventarisToSupabase);
+      resultTone(remote.ok, 'Inventaris tersimpan lokal, tapi Supabase belum menerima.', editId ? 'Inventaris berhasil diperbarui ke Supabase.' : 'Inventaris berhasil disimpan ke Supabase.');
+      return row;
+    };
+    window.simpanInventaris.__zAuditAdminFinal = true;
+    try { simpanInventaris = window.simpanInventaris; } catch(e){}
+  }
+
+  function wrapSurat(){
+    var old = window.simpanSurat;
+    if(typeof old !== 'function' || old.__zAuditAdminFinal) return;
+    window.simpanSurat = async function(){
+      var editId = clean((document.getElementById('su-edit-id') || {}).value);
+      if(!editId) editId = clean((document.getElementById('su-id') || {}).value);
+      var before = Array.isArray(window.suratData) ? window.suratData.slice() : [];
+      await withQuietToast(function(){ return old.apply(this, arguments); }.bind(this));
+      var after = Array.isArray(window.suratData) ? window.suratData : [];
+      var row = editId
+        ? after.find(function(x){ return sameId(x && x.id, editId); })
+        : (tail(after) && before.indexOf(tail(after)) === -1 ? tail(after) : tail(after));
+      var remote = await saveRemote(row, window.saveSuratToSupabase);
+      resultTone(remote.ok, 'Surat tersimpan lokal, tapi Supabase belum menerima.', editId ? 'Surat berhasil diperbarui ke Supabase.' : 'Surat berhasil disimpan ke Supabase.');
+      return row;
+    };
+    window.simpanSurat.__zAuditAdminFinal = true;
+    try { simpanSurat = window.simpanSurat; } catch(e){}
+  }
+
+  function wrapPengumuman(){
+    var old = window.tambahPengumuman;
+    if(typeof old !== 'function' || old.__zAuditAdminFinal) return;
+    window.tambahPengumuman = async function(){
+      var pid = clean((document.getElementById('peng-id') || {}).value);
+      var before = Array.isArray(window.pengumumanData) ? window.pengumumanData.slice() : [];
+      await withQuietToast(function(){ return old.apply(this, arguments); }.bind(this));
+      var after = Array.isArray(window.pengumumanData) ? window.pengumumanData : [];
+      var row = pid
+        ? after.find(function(x){ return sameId(x && x.id, pid); })
+        : (tail(after) && before.indexOf(tail(after)) === -1 ? tail(after) : tail(after));
+      var remote = await saveRemote(row, window.savePengumumanToSupabase);
+      resultTone(remote.ok, 'Pengumuman tersimpan lokal, tapi Supabase belum menerima.', pid ? 'Pengumuman berhasil diperbarui ke Supabase.' : 'Pengumuman berhasil disimpan ke Supabase.');
+      return row;
+    };
+    window.tambahPengumuman.__zAuditAdminFinal = true;
+    try { tambahPengumuman = window.tambahPengumuman; } catch(e){}
+    if(window.simpanPengumumanV13 === old || window.simpanPengumumanV13 === window.tambahPengumuman || typeof window.simpanPengumumanV13 === 'function'){
+      window.simpanPengumumanV13 = window.tambahPengumuman;
+      try { simpanPengumumanV13 = window.simpanPengumumanV13; } catch(e){}
+    }
+  }
+
+  function wrapArsip(){
+    var old = window.simpanUploadArsip;
+    if(typeof old !== 'function' || old.__zAuditAdminFinal) return;
+    window.simpanUploadArsip = async function(){
+      var before = Array.isArray(window.arsipData) ? window.arsipData.slice() : [];
+      await withQuietToast(function(){ return old.apply(this, arguments); }.bind(this));
+      var after = Array.isArray(window.arsipData) ? window.arsipData : [];
+      var row = tail(after) && before.indexOf(tail(after)) === -1 ? tail(after) : tail(after);
+      var remote = await saveRemote(row, window.saveArsipToSupabase);
+      resultTone(remote.ok, 'Dokumen arsip tersimpan lokal, tapi Supabase belum menerima.', 'Dokumen arsip berhasil disimpan ke Supabase.');
+      return row;
+    };
+    window.simpanUploadArsip.__zAuditAdminFinal = true;
+    try { simpanUploadArsip = window.simpanUploadArsip; } catch(e){}
+  }
+
+  function patchPerpustakaan(){
+    if(window.__zAuditPerpustakaanFinal) return;
+    window.__zAuditPerpustakaanFinal = true;
+
+    function rows(name){ return Array.isArray(window[name]) ? window[name] : []; }
+    function today(){ return new Date().toISOString().slice(0,10); }
+    function key(row, prefix){ return String((row && (row.client_key || row.key || row.kode || row.id)) || (prefix + '-' + Date.now())); }
+    async function upsert(table, payload){
+      if(!window.db) return false;
+      try {
+        if(typeof db.upsert === 'function') {
+          var r = await db.upsert(table, payload, 'client_key');
+          return !(r && r.error);
+        }
+        if(typeof db.insert === 'function') {
+          var i = await db.insert(table, payload);
+          return !(i && i.error);
+        }
+      } catch(e){}
+      return false;
+    }
+    function bookPayload(b){
+      b = b || {};
+      var stok = parseInt(b.stok || b.jumlah || 0, 10) || 0;
+      var dip = parseInt(b.dipinjam || 0, 10) || 0;
+      return { client_key:key(b,'buku'), kode:b.kode || '', judul:b.judul || b.nama || '', pengarang:b.pengarang || b.penulis || '', kategori:b.kat || b.kategori || 'Umum', stok:stok, tersedia:Math.max(0, stok - dip), tanggal:today() };
+    }
+    function pinjamPayload(p){
+      p = p || {};
+      return { client_key:key(p,'pinjam'), siswa_id:p.siswa_id || '', siswa_nis:p.siswa_nis || p.nis || '', nama_peminjam:p.nama || p.nama_peminjam || '', nama_siswa:p.nama || p.nama_peminjam || '', kelas:p.kelas || '', buku_id:p.buku_id || '', judul_buku:p.buku || p.judul_buku || p.judulBuku || '', tgl_pinjam:String(p.tgl || p.tglPinjam || p.tanggal || today()).slice(0,10), tgl_kembali:p.kembali || p.tglKembali || null, status:p.status || 'Aktif' };
+    }
+    function kembaliPayload(p){
+      p = p || {};
+      return { client_key:key(p,'kembali'), siswa_id:p.siswa_id || '', siswa_nis:p.siswa_nis || p.nis || '', nama_peminjam:p.nama || p.nama_peminjam || '', nama_siswa:p.nama || p.nama_peminjam || '', kelas:p.kelas || '', buku_id:p.buku_id || '', judul_buku:p.buku || p.judul_buku || p.judulBuku || '', tgl_kembali:String(p.tgl || p.tanggal || today()).slice(0,10), denda:0, kondisi_buku:p.kondisi_buku || 'Baik', status:p.status || 'Lunas' };
+    }
+    function renderPerp(){
+      try { if(typeof window.renderBuku === 'function') window.renderBuku(); } catch(e){}
+      try { if(typeof window.renderPeminjaman === 'function') window.renderPeminjaman(); } catch(e){}
+      try { if(typeof window.renderPengembalian === 'function') window.renderPengembalian(); } catch(e){}
+    }
+
+    var oldTambahBuku = window.tambahBuku;
+    if(typeof oldTambahBuku === 'function' && !oldTambahBuku.__zAuditAdminFinal){
+      window.tambahBuku = async function(){
+        var before = rows('bukuList').slice();
+        await withQuietToast(function(){ return oldTambahBuku.apply(this, arguments); }.bind(this));
+        var list = rows('bukuList');
+        var row = list.length > before.length ? list[list.length - 1] : list[list.length - 1];
+        if(!row) return;
+        var ok = await upsert('perpustakaan', bookPayload(row));
+        renderPerp();
+        resultTone(ok, 'Buku tersimpan lokal, tapi Supabase belum menerima.', 'Buku berhasil disimpan ke Supabase.');
+      };
+      window.tambahBuku.__zAuditAdminFinal = true;
+      try { tambahBuku = window.tambahBuku; } catch(e){}
+    }
+
+    var oldEditBuku = window.simpanEditBuku;
+    if(typeof oldEditBuku === 'function' && !oldEditBuku.__zAuditAdminFinal){
+      window.simpanEditBuku = async function(){
+        var idx = typeof window._editBukuIdx === 'number' ? window._editBukuIdx : -1;
+        await withQuietToast(function(){ return oldEditBuku.apply(this, arguments); }.bind(this));
+        var row = rows('bukuList')[idx];
+        if(!row) return;
+        var ok = await upsert('perpustakaan', bookPayload(row));
+        renderPerp();
+        resultTone(ok, 'Perubahan buku tersimpan lokal, tapi Supabase belum menerima.', 'Data buku berhasil diperbarui ke Supabase.');
+      };
+      window.simpanEditBuku.__zAuditAdminFinal = true;
+      try { simpanEditBuku = window.simpanEditBuku; } catch(e){}
+    }
+
+    var oldPinjam = window.tambahPeminjaman;
+    if(typeof oldPinjam === 'function' && !oldPinjam.__zAuditAdminFinal){
+      window.tambahPeminjaman = async function(){
+        var before = rows('peminjamanList').slice();
+        var judul = clean((document.getElementById('p-buku') || {}).value);
+        await withQuietToast(function(){ return oldPinjam.apply(this, arguments); }.bind(this));
+        var pinjam = rows('peminjamanList');
+        var row = pinjam.length > before.length ? pinjam[0] : pinjam[0];
+        if(!row) return;
+        var buku = rows('bukuList').find(function(b){ return clean(b.judul).toLowerCase() === clean(judul || row.buku || row.judul_buku).toLowerCase(); });
+        var okPinjam = await upsert('peminjaman', pinjamPayload(row));
+        var okBuku = buku ? await upsert('perpustakaan', bookPayload(buku)) : true;
+        renderPerp();
+        resultTone(okPinjam && okBuku, 'Peminjaman tersimpan lokal, tapi Supabase belum menerima semua data.', 'Peminjaman buku berhasil dicatat ke Supabase.');
+      };
+      window.tambahPeminjaman.__zAuditAdminFinal = true;
+      try { tambahPeminjaman = window.tambahPeminjaman; } catch(e){}
+    }
+
+    var oldKembali = window.kembalikanBukuByKey;
+    if(typeof oldKembali === 'function' && !oldKembali.__zAuditAdminFinal){
+      window.kembalikanBukuByKey = async function(keyArg){
+        var before = rows('pengembalianList').slice();
+        await withQuietToast(function(){ return oldKembali.apply(this, arguments); }.bind(this));
+        var kembali = rows('pengembalianList');
+        var row = kembali.length > before.length ? kembali[0] : kembali[0];
+        if(!row) return;
+        var buku = rows('bukuList').find(function(b){ return clean(b.judul).toLowerCase() === clean(row.buku || row.judul_buku).toLowerCase(); });
+        var okKembali = await upsert('pengembalian', kembaliPayload(row));
+        var okBuku = buku ? await upsert('perpustakaan', bookPayload(buku)) : true;
+        renderPerp();
+        resultTone(okKembali && okBuku, 'Pengembalian tersimpan lokal, tapi Supabase belum menerima semua data.', 'Pengembalian buku berhasil dicatat ke Supabase.');
+      };
+      window.kembalikanBukuByKey.__zAuditAdminFinal = true;
+      try { kembalikanBukuByKey = window.kembalikanBukuByKey; } catch(e){}
+    }
+  }
+
+  function boot(){
+    wrapKeuangan();
+    wrapInventaris();
+    wrapSurat();
+    wrapPengumuman();
+    wrapArsip();
+    patchPerpustakaan();
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){ [300,1200,2600,4200].forEach(function(ms){ setTimeout(boot, ms); }); });
+  setTimeout(boot, 1200);
+})();
+</script>
+<!-- PATCH: AUDIT ADMINISTRASI FINAL - STATUS SIMPAN JUJUR - END -->
+
+<!-- PATCH: PENGATURAN UMUM TANPA DATA LAMA/HARDCODE - START -->
+<script id="zymata-pengaturan-umum-no-hardcode-final">
+(function(){
+  'use strict';
+  if(window.__ZYMATA_PENGATURAN_UMUM_NO_HARDCODE_FINAL__) return;
+  window.__ZYMATA_PENGATURAN_UMUM_NO_HARDCODE_FINAL__ = true;
+
+  var KEY = 'sdplus_pengaturan_v1';
+  var CLIENT_KEY_KEY = 'zymata_pengaturan_umum_client_key';
+  var MARKER = 'zymata-pengaturan-final';
+  var FIELDS = [
+    ['set-nama-sekolah','namaSekolah','nama_sekolah'],
+    ['set-nss','nss','nss'],
+    ['set-npsn','npsn','npsn'],
+    ['set-kepsek','kepsek','kepsek'],
+    ['set-kota','kota','kota'],
+    ['set-alamat','alamat','alamat'],
+    ['set-email','email','email'],
+    ['set-telepon','telepon','telepon'],
+    ['set-website','website','website'],
+    ['set-jam-operasional','jamOperasional','jam_operasional'],
+    ['set-versi','versiAplikasi','versi_aplikasi'],
+    ['set-tahun-ajaran','tahunAjaran','tahun_ajaran']
+  ];
+
+  function clean(v){ return String(v == null ? '' : v).replace(/\s+/g,' ').trim(); }
+  function toast(msg, tone){ try { if(typeof showToast === 'function') return showToast(msg, tone || 'green'); } catch(e){} try { if(typeof _toast === 'function') return _toast(msg, tone || 'green'); } catch(e){} }
+  function get(id){ var el=document.getElementById(id); return el ? clean(el.value) : ''; }
+  function set(id,v){ var el=document.getElementById(id); if(el) el.value = v == null ? '' : String(v); }
+  function time(v){ var t=Date.parse(v || ''); return isNaN(t) ? 0 : t; }
+  function stableClientKey(){
+    try {
+      var active = window.ACTIVE_CLIENT_KEY || sessionStorage.getItem('ACTIVE_CLIENT_KEY') || localStorage.getItem('ACTIVE_CLIENT_KEY') || '';
+      if(active) return String(active);
+      var k = localStorage.getItem(CLIENT_KEY_KEY);
+      if(!k) {
+        k = 'pengaturan-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8);
+        localStorage.setItem(CLIENT_KEY_KEY, k);
+      }
+      return k;
+    } catch(e){ return 'pengaturan-local'; }
+  }
+  function normalize(r){
+    r = r || {};
+    var p = {
+      namaSekolah: r.namaSekolah || r.nama_sekolah || '',
+      nss: r.nss || '',
+      npsn: r.npsn || '',
+      kepsek: r.kepsek || '',
+      kota: r.kota || '',
+      alamat: r.alamat || '',
+      email: r.email || '',
+      telepon: r.telepon || r.no_telp || r.hp || '',
+      website: r.website || '',
+      jamOperasional: r.jamOperasional || r.jam_operasional || '',
+      versiAplikasi: r.versiAplikasi || r.versi_aplikasi || '',
+      tahunAjaran: r.tahunAjaran || r.tahun_ajaran || '',
+      gpsLat: r.gpsLat || r.gps_lat || '',
+      gpsLng: r.gpsLng || r.gps_lng || '',
+      gpsRadius: r.gpsRadius || r.gps_radius || '',
+      client_key: r.client_key || stableClientKey(),
+      updated_at: r.updated_at || r.updatedAt || r._savedAt || '',
+      _savedAt: r._savedAt || r.updated_at || r.updatedAt || '',
+      _marker: r._marker || ''
+    };
+    if(r.id) p._id = r.id;
+    if(r._id) p._id = r._id;
+    return p;
+  }
+  function readMarkedLocal(){
+    try {
+      var raw = localStorage.getItem(KEY);
+      if(!raw) return null;
+      var p = normalize(JSON.parse(raw));
+      if(p._marker !== MARKER) {
+        localStorage.removeItem(KEY);
+        return null;
+      }
+      return p;
+    } catch(e){ return null; }
+  }
+  function saveLocal(p){
+    try {
+      p = normalize(p);
+      p._marker = MARKER;
+      p.client_key = p.client_key || stableClientKey();
+      localStorage.setItem(KEY, JSON.stringify(p));
+    } catch(e){}
+  }
+  function apply(p){
+    p = normalize(p || {});
+    window.pengaturanSekolah = p;
+    FIELDS.forEach(function(m){ set(m[0], p[m[1]] || ''); });
+    var nama = p.namaSekolah || 'Belum diatur';
+    var header = document.getElementById('header-nama-sekolah');
+    if(header) header.textContent = nama;
+    document.title = p.namaSekolah ? ('Zymata - ' + p.namaSekolah) : 'Zymata';
+    var footerName = document.getElementById('footer-app-name');
+    if(footerName) footerName.textContent = p.namaSekolah || 'Zymata';
+    var footerVersion = document.getElementById('footer-app-version');
+    if(footerVersion) footerVersion.textContent = p.versiAplikasi || 'Versi -';
+    var footerEmail = document.getElementById('footer-email-sekolah');
+    if(footerEmail) footerEmail.textContent = p.email || 'Belum diatur';
+    var footerJam = document.getElementById('footer-jam-operasional');
+    if(footerJam) footerJam.textContent = p.jamOperasional || 'Belum diatur';
+    if(p.tahunAjaran) {
+      window.currentTahunAjaran = p.tahunAjaran;
+      var badge = document.querySelector('.tahun-badge');
+      if(badge) badge.textContent = p.tahunAjaran;
+    }
+    return p;
+  }
+  function readForm(){
+    var p = normalize(window.pengaturanSekolah || {});
+    FIELDS.forEach(function(m){ p[m[1]] = get(m[0]); });
+    p.client_key = p.client_key || stableClientKey();
+    p._savedAt = new Date().toISOString();
+    p.updated_at = p._savedAt;
+    p._marker = MARKER;
+    return p;
+  }
+  function payload(p, extended){
+    p = normalize(p);
+    var out = {
+      client_key: p.client_key || stableClientKey(),
+      nama_sekolah: p.namaSekolah || '',
+      nss: p.nss || '',
+      kepsek: p.kepsek || '',
+      kota: p.kota || '',
+      alamat: p.alamat || '',
+      updated_at: p.updated_at || new Date().toISOString()
+    };
+    if(p.gpsLat) out.gps_lat = p.gpsLat;
+    if(p.gpsLng) out.gps_lng = p.gpsLng;
+    if(p.gpsRadius) out.gps_radius = p.gpsRadius;
+    if(extended !== false) {
+      out.npsn = p.npsn || '';
+      out.email = p.email || '';
+      out.telepon = p.telepon || '';
+      out.website = p.website || '';
+      out.jam_operasional = p.jamOperasional || '';
+      out.versi_aplikasi = p.versiAplikasi || '';
+      out.tahun_ajaran = p.tahunAjaran || '';
+    }
+    return out;
+  }
+  function chooseRemote(rows, local){
+    rows = Array.isArray(rows) ? rows.map(normalize) : [];
+    if(!rows.length) return null;
+    var ck = stableClientKey();
+    var own = rows.filter(function(r){ return String(r.client_key || '') === ck; });
+    if(own.length) rows = own;
+    else if(local && local._id) {
+      var byId = rows.filter(function(r){ return String(r._id || '') === String(local._id); });
+      if(byId.length) rows = byId;
+    }
+    rows.sort(function(a,b){ return time(b.updated_at || b._savedAt) - time(a.updated_at || a._savedAt); });
+    return rows[0] || null;
+  }
+  async function saveRemote(p){
+    if(!window.db) return false;
+    var full = payload(p, true);
+    var minimal = payload(p, false);
+    try {
+      if(typeof db.upsert === 'function') {
+        var upsert = await db.upsert('pengaturan_sekolah', full, 'client_key');
+        if(!(upsert && upsert.error)) return true;
+      }
+    } catch(e){}
+    try {
+      if(p._id && typeof db.update === 'function') {
+        var up = await db.update('pengaturan_sekolah', p._id, full);
+        if(!(up && up.error)) return true;
+      }
+      if(typeof db.insert === 'function') {
+        var ins = await db.insert('pengaturan_sekolah', full);
+        if(!(ins && ins.error)) return true;
+      }
+    } catch(e1){}
+    try {
+      if(p._id && typeof db.update === 'function') {
+        var up2 = await db.update('pengaturan_sekolah', p._id, minimal);
+        if(!(up2 && up2.error)) return true;
+      }
+      if(typeof db.insert === 'function') {
+        var ins2 = await db.insert('pengaturan_sekolah', minimal);
+        if(!(ins2 && ins2.error)) return true;
+      }
+    } catch(e2){}
+    return false;
+  }
+
+  window._applyPengaturan = apply;
+  window.loadPengaturanFromSupabase = async function(){
+    var local = readMarkedLocal();
+    var remote = null;
+    if(window.db && typeof db.select === 'function') {
+      try {
+        var res = await db.select('pengaturan_sekolah', { limit: 100 });
+        if(res && !res.error) remote = chooseRemote(res.data || [], local);
+      } catch(e){ console.warn('[Pengaturan Final] load Supabase gagal:', String(e)); }
+    }
+    var chosen = null;
+    if(local && (!remote || time(local._savedAt || local.updated_at) >= time(remote.updated_at || remote._savedAt))) chosen = local;
+    else chosen = remote || local;
+    if(chosen) {
+      chosen = apply(chosen);
+      saveLocal(chosen);
+      return true;
+    }
+    apply({});
+    return false;
+  };
+  try { loadPengaturanFromSupabase = window.loadPengaturanFromSupabase; } catch(e){}
+
+  window.simpanPengaturan = async function(){
+    var p = readForm();
+    if(!p.namaSekolah) { toast('Nama sekolah wajib diisi.', 'red'); return; }
+    p = apply(p);
+    saveLocal(p);
+    var ok = await saveRemote(p);
+    toast(ok ? 'Pengaturan umum tersimpan ke Supabase dan tidak akan balik ke data lama.' : 'Pengaturan umum tersimpan lokal. Supabase belum menerima, tapi data lama lokal sudah dibersihkan.', ok ? 'green' : 'amber');
+    return ok;
+  };
+  try { simpanPengaturan = window.simpanPengaturan; } catch(e){}
+
+  window.resetPengaturan = function(){
+    if(!confirm('Kosongkan form pengaturan umum? Data lama lokal akan dibersihkan.')) return;
+    try { localStorage.removeItem(KEY); } catch(e){}
+    apply({});
+    toast('Form pengaturan dikosongkan dan data lama lokal dibersihkan.', 'green');
+  };
+  try { resetPengaturan = window.resetPengaturan; } catch(e){}
+
+  window.sekolah = function(){
+    return clean(get('set-nama-sekolah') || (window.pengaturanSekolah && window.pengaturanSekolah.namaSekolah) || 'Belum diatur');
+  };
+
+  function boot(){
+    if(!readMarkedLocal()) {
+      try { localStorage.removeItem(KEY); } catch(e){}
+      apply({});
+    }
+    setTimeout(window.loadPengaturanFromSupabase, 150);
+  }
+  var oldShow = window.showPage;
+  if(typeof oldShow === 'function' && !oldShow.__zPengaturanNoHardcodeFinal) {
+    window.showPage = function(id){
+      var out = oldShow.apply(this, arguments);
+      if(id === 'pengaturan') setTimeout(window.loadPengaturanFromSupabase, 80);
+      return out;
+    };
+    window.showPage.__zPengaturanNoHardcodeFinal = true;
+    try { showPage = window.showPage; } catch(e){}
+  }
+  document.addEventListener('DOMContentLoaded', function(){ [100,700,1800].forEach(function(ms){ setTimeout(boot, ms); }); });
+  setTimeout(boot, 700);
+})();
+</script>
+<!-- PATCH: PENGATURAN UMUM TANPA DATA LAMA/HARDCODE - END -->
 
 </body>
 </html>
