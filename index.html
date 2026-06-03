@@ -47227,5 +47227,126 @@ div[id^="modal-"]:not(#modal-login-real):not(#modal-login) > div [style*="max-he
 </script>
 <!-- PATCH: STABILKAN DROPDOWN KELAS JADWAL - END -->
 
+<!-- PATCH: SIMPAN KELAS/WALI KELAS GURU KE SUPABASE TANPA UBAH TAMPILAN - START -->
+<script id="zymata-guru-kelas-supabase-only-save">
+(function(){
+  'use strict';
+  if(window.__ZYMATA_GURU_KELAS_SUPABASE_ONLY_SAVE__) return;
+  window.__ZYMATA_GURU_KELAS_SUPABASE_ONLY_SAVE__ = true;
+
+  function clean(v){ return String(v==null?'':v).replace(/[\t\r\n]+/g,' ').replace(/\s+/g,' ').trim(); }
+  function val(id){ var el=document.getElementById(id); return el ? clean(el.value) : ''; }
+  function toast(msg, tone){ try { if(typeof showToast === 'function') showToast(msg, tone || 'green'); } catch(e){} }
+  function splitList(v){ return clean(v).split(/[;,]/).map(clean).filter(Boolean); }
+  function kelasValue(v){
+    var parts = splitList(v);
+    return parts.length > 1 ? parts : (parts[0] || null);
+  }
+  function isSchemaErr(err){
+    var msg = String(err && (err.message || err.details || err.hint || err) || '');
+    return /column|schema cache|could not find|does not exist/i.test(msg);
+  }
+  function isTypeErr(err){
+    var msg = String(err && (err.message || err.details || err.hint || err) || '');
+    return /malformed|invalid input|array|json/i.test(msg);
+  }
+  function snapGuruKelas(){
+    return {
+      id: val('guru-edit-nip'),
+      nip: val('g-nip'),
+      nama: val('g-nama'),
+      kelasDiajar: val('g-kelas-diajar'),
+      waliKelas: val('g-wali-kelas'),
+      rombel: val('g-rombel'),
+      jam: val('g-jam'),
+      tahunAjaran: val('g-tahun-ajaran'),
+      semester: val('g-semester')
+    };
+  }
+  async function findGuruRow(snap){
+    if(!window.db || typeof db.select !== 'function') return null;
+    if(snap.id) {
+      try {
+        var byId = await db.select('guru', {eq:{id:snap.id}, limit:1});
+        if(!byId.error && byId.data && byId.data[0]) return byId.data[0];
+      } catch(e){}
+    }
+    if(snap.nip) {
+      try {
+        var byNip = await db.select('guru', {eq:{nip:snap.nip}, limit:1});
+        if(!byNip.error && byNip.data && byNip.data[0]) return byNip.data[0];
+      } catch(e){}
+    }
+    if(snap.nama) {
+      try {
+        var byNama = await db.select('guru', {eq:{nama:snap.nama}, limit:1});
+        if(!byNama.error && byNama.data && byNama.data[0]) return byNama.data[0];
+      } catch(e){}
+    }
+    return null;
+  }
+  async function updateGuruExtra(row, snap){
+    if(!row || !row.id || !window.db || typeof db.update !== 'function') return false;
+    var textPayload = {
+      kelas_diajar: snap.kelasDiajar || null,
+      wali_kelas: snap.waliKelas || null,
+      rombel: snap.rombel || null,
+      jam_mengajar: parseInt(snap.jam, 10) || null,
+      tahun_ajaran: snap.tahunAjaran || null,
+      semester: snap.semester || null
+    };
+    var res = await db.update('guru', row.id, textPayload);
+    if(!res || !res.error) return true;
+    if(isTypeErr(res.error)) {
+      var listPayload = Object.assign({}, textPayload, {
+        kelas_diajar: kelasValue(snap.kelasDiajar),
+        wali_kelas: snap.waliKelas || null
+      });
+      res = await db.update('guru', row.id, listPayload);
+      if(!res || !res.error) return true;
+    }
+    if(isSchemaErr(res.error)) {
+      try {
+        await db.update('guru', row.id, {updated_at:new Date().toISOString()});
+      } catch(e){}
+      return false;
+    }
+    return false;
+  }
+  async function simpanGuruKelasSupabase(snap){
+    if(!snap || (!snap.kelasDiajar && !snap.waliKelas && !snap.rombel)) return;
+    if(!window.db || typeof db.select !== 'function' || typeof db.update !== 'function') {
+      toast('Supabase belum siap. Kelas/wali kelas guru belum tersimpan online.', 'amber');
+      return;
+    }
+    var row = await findGuruRow(snap);
+    if(!row || !row.id) {
+      toast('Data guru belum ditemukan di Supabase. Cek koneksi atau klik Muat Ulang.', 'amber');
+      return;
+    }
+    var ok = await updateGuruExtra(row, snap);
+    if(ok) toast('Kelas/wali kelas guru tersimpan ke Supabase.', 'green');
+    else toast('Kelas/wali kelas guru belum masuk Supabase. Cek kolom kelas_diajar/wali_kelas.', 'amber');
+  }
+  function wrap(){
+    var old = window.simpanGuru;
+    if(typeof old !== 'function' || old.__zGuruKelasOnlySave) return;
+    window.simpanGuru = function(){
+      var snap = snapGuruKelas();
+      var out = old.apply(this, arguments);
+      Promise.resolve(out).then(function(){ return simpanGuruKelasSupabase(snap); }).catch(function(e){
+        try { console.warn('[Guru kelas Supabase] Gagal simpan kelas/wali kelas:', e); } catch(_){}
+      });
+      return out;
+    };
+    window.simpanGuru.__zGuruKelasOnlySave = true;
+    try { simpanGuru = window.simpanGuru; } catch(e){}
+  }
+  document.addEventListener('DOMContentLoaded', function(){ [300,1000,2500].forEach(function(ms){ setTimeout(wrap, ms); }); });
+  setTimeout(wrap, 1200);
+})();
+</script>
+<!-- PATCH: SIMPAN KELAS/WALI KELAS GURU KE SUPABASE TANPA UBAH TAMPILAN - END -->
+
 </body>
 </html>
